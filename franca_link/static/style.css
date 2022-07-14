@@ -1,0 +1,223 @@
+[v-cloak] {
+    display: none;
+}
+
+@font-face {
+    font-family: 'Roboto Slab';
+    font-weight: 100 900;
+    src: url(RobotoSlab-VariableFont_wght.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Roboto';
+    src: url(Roboto-Regular.woff2) format('woff2');
+}
+
+:root {
+    --g_g: 120;
+    --g_l: 29.6%;
+    --green: hsla(var(--g_g), 55%, var(--g_l), 1);
+}
+
+html {
+    font-family: "Roboto", sans-serif;
+}
+
+body {
+    /*This is so that #space_to_buttons will expand to fill all of the height*/
+    /*it can since body will never be shorter than the viewport*/
+    min-height: 100vh;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    padding: 1.5rem 0 0;
+}
+
+h1, h2 {
+    font-family: 'Roboto Slab', serif;
+    font-weight: 700;
+}
+
+h3 {
+    text-align: left;
+    font-family: 'Roboto Slab', serif;
+    font-weight: 400;
+}
+
+h1, a, .btn-link {
+    color: var(--green);
+}
+
+h1:hover > a, h2:hover > a{
+    color: rgb(34, 117, 56);
+}
+
+.page_item {
+    margin: 1.5rem 1.5rem 0;
+}
+
+.card {
+    border-radius: 0.75rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    flex: 0;
+    flex-wrap: wrap;
+    text-align: center;
+    word-break: normal;
+    overflow-wrap: anywhere;
+}
+
+.text_card {
+    max-width: 40em;
+    align-items: initial;
+    text-align: left;
+}
+
+.title_card h1, .title_card h2 {
+    text-align: center;
+    margin: 1rem 0 1rem;
+}
+
+h1 img, h2 img {
+    height: 1em;
+}
+
+.title_card ol {
+    margin-bottom: 0;
+}
+
+#landing {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    row-gap: 1.5rem;
+    column-gap: 3rem;
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+}
+
+#landing > img {
+    width: 17.5rem;
+    filter: drop-shadow(0 0 0.4rem var(--bs-gray-500));
+}
+
+#landing .card-body{
+    display: inline-block;
+    flex: initial;
+}
+
+#landing .card-body > div {
+    align-items: start;
+    display: flex;
+}
+
+#landing .card-body > div > div{
+    flex-grow: 1;
+    width: 0;
+    break-after: always;
+}
+
+#landing .list_item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#landing .list_item img, #landing .list_item svg{
+    object-fit: cover;
+    flex-basis: 4rem;
+    flex-shrink: 0;
+    height: 100%;
+    padding: .3rem;
+    fill: var(--green);
+}
+
+#landing .list_item h1 {
+    font-size: 3.7rem;
+    text-indent: 0;
+    line-height: 3.7rem;
+    margin: 0;
+    overflow-wrap: normal;
+}
+
+#landing .list_item p {
+    /*display: flex;*/
+    align-items: center;
+    text-align: left;
+    margin-left: 1.5rem;
+    margin-bottom: 0;
+}
+
+#instructions {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1.5rem;
+    background-color: var(--bs-gray-200);
+}
+
+#instructions h3 {
+    margin-top: 2rem;
+}
+
+#instructions .card-body {
+    display: block;
+}
+
+#instructions .card-body:last-child {
+    margin-bottom: 1.5rem;
+}
+
+#instructions ol img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+#instructions .card-body input {
+    margin: auto;
+}
+
+#name {
+    width: 100%;
+    text-align: center;
+}
+
+.course_card {
+    width: 15rem;
+}
+
+.course_card .card-body{
+    padding-bottom: 1rem;
+}
+
+.course_card .card-body > *:first-child() {
+    margin-bottom: .6rem;
+}
+
+.card-body > * {
+    margin: 0 0 1rem;
+}
+
+.card-body > *:last-child {
+    margin: 0;
+}
+
+.form-control {
+    width: initial;
+}
+
+#space_to_buttons {
+    flex-grow: 1;
+}
+
+#space_to_bottom {
+    flex-basis: 3rem;
+}
