@@ -9,7 +9,7 @@ setup(name='franca_link',
       install_requires = [
           'flask',
           'logging_franca_link @ git+https://github.com/francaellerman/logging_franca_link',
-          'lhs_connections @ git+https://github.com/francaellerman/lhs_connections'
-          #'naviance_calculator_web'
+          'lhs_connections @ git+https://github.com/francaellerman/lhs_connections',
+          'naviance_calculator_web @ git+https://github.com/francaellerman/naviance_calculator_web'
       ]
       )

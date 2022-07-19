@@ -35,3 +35,7 @@ _index = wrapper()
 @_index
 def index():
     return flask.render_template('index.html')
+
+@app.route('/gabe', methods=['GET'])
+def gabe():
+    return flask.render_template('sf_ithaca.html')

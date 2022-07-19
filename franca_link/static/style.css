@@ -14,9 +14,10 @@
 }
 
 :root {
-    --g_g: 120;
+    --g_h: 120;
+    --g_s: 55%;
     --g_l: 29.6%;
-    --green: hsla(var(--g_g), 55%, var(--g_l), 1);
+    --green: hsla(var(--g_h), var(--g_s), var(--g_l), 1);
 }
 
 html {
@@ -48,8 +49,8 @@ h1, a, .btn-link {
     color: var(--green);
 }
 
-h1:hover > a, h2:hover > a{
-    color: rgb(34, 117, 56);
+a:hover{
+    color: var(--green);
 }
 
 .page_item {
@@ -200,6 +201,48 @@ h1 img, h2 img {
 
 .course_card .card-body > *:first-child() {
     margin-bottom: .6rem;
+}
+
+.accordion-button:focus {
+    border-color: white;
+    box-shadow: none;
+}
+
+.accordion-button:not(.collapsed) {
+    color: initial;
+    background-color: white;
+}
+
+#copy_space .list-group-item {
+    border-right-color: var(--green);
+}
+
+#copy_space .list-group-item-action {
+    flex-basis: min-content;
+    display: flex;
+    padding: .5em;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-color: var(--green);
+}
+
+#copy_space svg {
+    width: 1em;
+    height: 1em;
+    color: var(--green);
+}
+
+#shares {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: .5rem;
+}
+
+#shares svg {
+    width: 1.7rem;
+    height: 1.7rem;
 }
 
 .card-body > * {
