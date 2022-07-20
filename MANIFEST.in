@@ -1,2 +1,1 @@
-graft franca_link/templates
-graft franca_link/static
+graft .
