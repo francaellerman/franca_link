@@ -44,12 +44,16 @@ def post():
         with warnings.catch_warnings(record=True) as caught_warnings:
             file = flask.request.files['pdf']
             md = worker.get_metadata(file)
-            with pkg_resources.resource_stream('lhs_connections', 'pdf_metadata.pickle') as f:
+            with pkg_resources.resource_stream('franca_link.lhs_connections', 'pdf_metadata.pickle') as f:
                 franca_md = pickle.load(f)
-            if not (md['ModDate'] == md['CreationDate'] and
-                    md['Creator'] == franca_md['Creator'] and
-                    md['Producer'] == franca_md['Producer']):
-                raise Exception("Metadata does not fit the criteria")
+                print(franca_md)
+                print(md)
+            if not md['ModDate'] == md['CreationDate']:
+                raise Exception("Metadata does not fit the criteria: same mod and creation", md['ModDate'], md['CreationDate'])
+            if not md['Creator'].decode('utf-8') == franca_md['Creator']:
+                raise Exception("Metadata does not fit the criteria: same creator", md['Creator'].decode('utf-8'), franca_md['Creator'])
+            if not md['Producer'].decode('utf-8') == franca_md['Producer']:
+                raise Exception("Metadata does not fit the criteria: same producer", md['Producer'].decode('utf-8'), franca_md['Producer'])
             if len(caught_warnings) > 0:
                 raise Exception("Getting PDF metadata raised a warning")
         information = worker.get_pdf_info(file)

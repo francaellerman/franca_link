@@ -17,8 +17,6 @@ def get_metadata(fp):
     #This was from some example
     parser = PDFParser(fp)
     doc = PDFDocument(parser)
-    parser.set_document(doc)
-    doc.set_parser(parser)
     return doc.info[0]
 
 def get_pdf_text(f):
@@ -31,7 +29,7 @@ def between(base, str1, str2):
 
 def get_pdf_info(f):
     info = {}
-    with pkg_resources.resource_stream('lhs_connections', 'pdf_info_finders.pickle') as file:
+    with pkg_resources.resource_stream('franca_link.lhs_connections', 'pdf_info_finders.pickle') as file:
         finders = pickle.load(file)
     text = get_pdf_text(f)
     info['name'] = between(text, finders[0], finders[1])
