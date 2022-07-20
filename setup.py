@@ -5,7 +5,7 @@ setup(name='franca_link',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
-      py_modules=['franca_link'],
+      #py_modules=['franca_link'],
       install_requires = [
           'flask',
           'pdfminer',
