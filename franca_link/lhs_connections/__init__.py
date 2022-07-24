@@ -10,6 +10,7 @@ import pkg_resources
 import pathlib
 import franca_link.lhs_connections.worker as worker
 import franca_link.my_logging as my_logging
+import pdb
 
 wrapper_related = my_logging.wrapper_related('franca_link.connections')
 wrapper = wrapper_related.wrapper
@@ -36,6 +37,7 @@ def about():
 
 @app.route('/api', methods=['POST'])
 def post():
+    pdb.set_trace()
     information = {}
     resp = flask.make_response()
     file = None
@@ -46,14 +48,12 @@ def post():
             md = worker.get_metadata(file)
             with pkg_resources.resource_stream('franca_link.lhs_connections', 'pdf_metadata.pickle') as f:
                 franca_md = pickle.load(f)
-                print(franca_md)
-                print(md)
             if not md['ModDate'] == md['CreationDate']:
                 raise Exception("Metadata does not fit the criteria: same mod and creation", md['ModDate'], md['CreationDate'])
-            if not md['Creator'].decode('utf-8') == franca_md['Creator']:
-                raise Exception("Metadata does not fit the criteria: same creator", md['Creator'].decode('utf-8'), franca_md['Creator'])
-            if not md['Producer'].decode('utf-8') == franca_md['Producer']:
-                raise Exception("Metadata does not fit the criteria: same producer", md['Producer'].decode('utf-8'), franca_md['Producer'])
+            if not md['Creator'] == franca_md['Creator']:
+                raise Exception("Metadata does not fit the criteria: same creator", md['Creator'], franca_md['Creator'])
+            if not md['Producer'] == franca_md['Producer']:
+                raise Exception("Metadata does not fit the criteria: same producer", md['Producer'], franca_md['Producer'])
             if len(caught_warnings) > 0:
                 raise Exception("Getting PDF metadata raised a warning")
         information = worker.get_pdf_info(file)

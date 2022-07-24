@@ -100,19 +100,19 @@ def get_connections(id_):
 
 #Functions for getting the initial data, only used once
 
-def load_metadata():
-    with open(start + "pdf_metadata.pickle", 'wb') as f:
-        pickle.dump(get_metadata(open('my_schedule.pdf', 'rb')), f)
+def load_metadata(filename):
+    with open("pdf_metadata.pickle", 'wb') as f:
+        pickle.dump(get_metadata(open(filename, 'rb')), f)
 
-def load_info_finder_text():
-    with open(start + 'my_schedule.pdf', 'rb') as f:
+def load_info_finder_text(filename):
+    with open(filename, 'rb') as f:
         text = get_pdf_text(f)
     name = 'Ellerman, Franca'
     student_id = '10001282'
     finders = [text[:text.find(name)],
         between(text, name, student_id),
         '\n']
-    with open(start + 'pdf_info_finders.pickle', 'wb') as f:
+    with open('pdf_info_finders.pickle', 'wb') as f:
         pickle.dump(finders, f)
 
 def make_sql_databases():
