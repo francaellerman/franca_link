@@ -10,7 +10,6 @@ import pkg_resources
 import pathlib
 import franca_link.lhs_connections.worker as worker
 import franca_link.my_logging as my_logging
-import pdb
 
 wrapper_related = my_logging.wrapper_related('franca_link.connections')
 wrapper = wrapper_related.wrapper
@@ -37,7 +36,6 @@ def about():
 
 @app.route('/api', methods=['POST'])
 def post():
-    pdb.set_trace()
     information = {}
     resp = flask.make_response()
     file = None
