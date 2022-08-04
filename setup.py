@@ -9,9 +9,12 @@ setup(name='franca_link',
       install_requires = [
           'flask',
           'pdfminer',
+          'pdfminer.six',
           'PyPDF2',
-          'tabula',
+          'tabula-py',
           'pandas',
+          'icalendar',
+          'pyyaml',
           'naviance_admissions_calculator_web @ git+https://github.com/francaellerman/naviance_admissions_calculator_web'
       ]
       )

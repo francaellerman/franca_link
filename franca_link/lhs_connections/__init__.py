@@ -10,6 +10,7 @@ import pkg_resources
 import pathlib
 import franca_link.lhs_connections.worker as worker
 import franca_link.my_logging as my_logging
+import yaml
 
 wrapper_related = my_logging.wrapper_related('franca_link.connections')
 wrapper = wrapper_related.wrapper
@@ -18,14 +19,19 @@ app = flask.Blueprint('connections', __name__, template_folder='templates', stat
 
 start = 'connections/'
 
+with open('/etc/franca_link/lhs_connections_config.yaml', 'rb') as f:
+    config_ = yaml.safe_load(f)
+
 index_ = wrapper()
 @app.route('/', methods=['GET'])
 @index_
 def index():
+    global config_
     user_agent = flask.request.headers.get('User-Agent').lower()
     if 'iphone' in user_agent or 'android' in user_agent: mobile = True
     else: mobile = False
-    return flask.render_template('lhs_connections/index.html', mobile=mobile)
+    return flask.render_template('lhs_connections/index.html', mobile=mobile,
+        links=config_['links'])
 
 about_ = wrapper()
 @app.route('/about', methods=['GET'])
@@ -61,7 +67,7 @@ def post():
             file.seek(0)
             worker.insert_sql_data(information, time, file)
             file.seek(0)
-            file.save(os.path.join(start + "pdfs", f'{information["ID"]}_{time}.pdf'))
+            file.save(os.path.join(start + "pdfs", f'{time}.pdf'))
             message = "Request success"
         file.close()
     except:

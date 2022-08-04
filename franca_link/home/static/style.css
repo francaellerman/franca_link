@@ -214,7 +214,7 @@ h1 img, h2 img {
 }
 
 #copy_space .list-group-item {
-    border-right-color: var(--green);
+    /*border-right-color: var(--green);*/
 }
 
 #copy_space .list-group-item-action {
@@ -224,7 +224,7 @@ h1 img, h2 img {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    border-color: var(--green);
+    /*border-color: var(--green);*/
 }
 
 #copy_space svg {

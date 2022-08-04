@@ -38,7 +38,7 @@ class JsonFormatter(DictFormatter):
         return r
 
 class EmailFormatter(DictFormatter):
-    keys = ['name', 'msg', 'levelname', 'flask_path', 'flask_method','ID', 'asctime']
+    keys = ['name', 'msg', 'levelname', 'flask_path', 'flask_method','ID', 'asctime', 'db_created']
     def format(self, record):
         d = super().format(record)
         try:
@@ -57,11 +57,15 @@ class connections_filter(logging.Filter):
     def filter(self, record):
         #Only allows warnings+ unless it's a non-ignorable user because I
         #want to see who's going to my site :)
-        return ((record.name.startswith('franca_link') and not record.__dict__.get('ignore')) or record.levelno >= 30) and record.msg.find('Using fallback font') == -1 
+        b = ((record.name.startswith('franca_link') and not record.__dict__.get('ignore')) or record.levelno >= 30) and record.msg.find('Using fallback font') == -1 
+        return b
 
 class email_filter(connections_filter):
     def filter(self, record):
-        return super().filter(record) and not record.__dict__.get('flask_path') == '/calculator/api' and not record.__dict__.get('flask_path') == '/'
+        d = record.__dict__
+        #I want emails when there's a new user and when there's an error
+        b = super().filter(record) and (record.levelno >= 30 or (d.get('flask_path').endswith('/api') and d.get('flask_method') == 'POST' and record.msg == 'Request success')) and not d.get('flask_path') == '/'
+        return b
 
 def set_up_logging():
     global EmailHandler
@@ -94,19 +98,23 @@ class wrapper_related:
     def __init__(self, name):
         self.logger = logging.getLogger(name)
 
-    def extra(self, id_=None):
+    def extra(self, id_=None, extra={}):
         ip = flask.request.environ.get('HTTP_X_REAL_IP',
                 flask.request.remote_addr)
         student_id = id_ if id_ else flask.session.get('ID')
-        return {'IP': ip, 'ID': student_id,
+        return {**{'IP': ip, 'ID': student_id,
                 'ignore': flask.request.cookies.get('ignore'),
                 'flask_path': flask.request.path,
-                'flask_method': flask.request.method}
+                'flask_method': flask.request.method},
+                **extra}
 
-    def info(self, message, id_=None):
+    def info(self, message, id_=None, extra=None):
         self.logger.info(message, extra=self.extra(id_))
 
-    def exception(self, id_=None):
+    def warning(self, message, id_=None, extra=None):
+        self.logger.warning(message, extra=self.extra(id_))
+
+    def exception(self, id_=None, extra=None):
         self.logger.exception("Runtime exception", extra=self.extra(id_))
 
     def wrapper(self, message=None):
