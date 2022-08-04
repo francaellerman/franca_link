@@ -66,8 +66,6 @@ def post():
         else:
             file.seek(0)
             worker.insert_sql_data(information, time, file)
-            file.seek(0)
-            file.save(os.path.join(start + "pdfs", f'{time}.pdf'))
             message = "Request success"
         file.close()
     except:
@@ -75,8 +73,13 @@ def post():
         #Could download file if something goes wrong
         flask.abort(500)
     else:
-        wrapper_related.info(message, id_=information['ID'])
+        wrapper_related.info(message, id_=information['ID'], extra={'db_created': time})
         flask.session['ID'] = information['ID']
+    finally:
+        if file:
+            file.seek(0)
+            file.save(os.path.join(start + "pdfs", f'{time}.pdf'))
+            file.close()
     return resp
 
 get_ = wrapper()
