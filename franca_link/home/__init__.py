@@ -8,7 +8,7 @@ import warnings
 from pathlib import Path
 import franca_link.my_logging as my_logging
 import franca_link.lhs_connections as lhs_connections
-import franca_link.lhs_calendar as lhs_calendar
+#import franca_link.lhs_calendar as lhs_calendar
 import naviance_admissions_calculator_web as nacw
 
 my_logging.set_up_logging()
