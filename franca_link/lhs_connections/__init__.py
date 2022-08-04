@@ -67,7 +67,6 @@ def post():
             file.seek(0)
             worker.insert_sql_data(information, time, file)
             message = "Request success"
-        file.close()
     except:
         wrapper_related.exception(id_=information.get('ID'))
         #Could download file if something goes wrong
@@ -90,6 +89,8 @@ def get():
     if not id_:
         r = 'No ID'
     else:
+        #If this is out of range then the POST claimed to work by sending an ID
+        #cookie but didn't actually since the name isn't in the students table
         name = worker.format_name(worker.returning_user_name(id_)[0][0])
         r = {'name': name,
             'class_list': worker.get_connections(id_)}

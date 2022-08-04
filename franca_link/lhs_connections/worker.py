@@ -38,13 +38,22 @@ def get_pdf_info(f):
 
 def returning_user_name(id_):
     con = sqlite3.connect(start + 'connections.sql')
-    return list(con.cursor().execute(
-        "select name from students where id = ?", [int(id_)]))
+    return list(db("select name from students where id = ?", [int(id_)]))
 
-def insert_sql_data(information, time, file):
+def db(*args, **kwargs):
     con = sqlite3.connect(start + 'connections.sql')
     cur = con.cursor()
-    cur.execute("insert into students(id, created, name) values(?,?,?)", [int(information['ID']), time, information['name']])
+    try:
+        resp = cur.execute(*args, **kwargs).fetchall()
+        con.commit()
+        con.close()
+        return resp
+    except Exception as e:
+        con.close()
+        raise e
+
+def insert_sql_data(information, time, file):
+    db("insert into students(id, created, name) values(?,?,?)", [int(information['ID']), time, information['name']])
     #id_df = pd.DataFrame({'student_id': [information['ID']], 'created': [time],
     #    'student_name': [information['name']]}, index=[])
     #id_df.to_sql('student_names', con=con, if_exists='append', index=False)
@@ -62,15 +71,19 @@ def insert_sql_data(information, time, file):
     df = df[df['course_no'] != 'Iblock']
     course_df = df[['course_no', 'created', 'name']]
     def upsert_course_name(row):
-        cur.execute("insert into courses(id, created, name) values(?,?,?) on conflict(id) do nothing", row)
+        db("insert into courses(id, created, name) values(?,?,?) on conflict(id) do nothing", row)
     [upsert_course_name(row) for row in course_df.to_numpy()]
     #course_df = course_df.rename(columns={'course_no': 'id'})
     #course_df = course_df.set_index('id')
     df = df.drop(columns=['Course', 'name'])
-    df.to_sql('enrollments', con=con, if_exists='append', index=False)
-    #Should throw an error if there are multiple names to the same course ID
-    #course_df.to_sql('courses', con=con, if_exists='append')
-    con.close()
+    con = sqlite3.connect(start + 'connections.sql')
+    cur = con.cursor()
+    try:
+        df.to_sql('enrollments', con=con, if_exists='append', index=False)
+        con.close()
+    except Exception as e:
+        con.close()
+        raise e
 
 def format_name(name):
     comma = name.find(',')

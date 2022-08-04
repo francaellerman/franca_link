@@ -38,7 +38,7 @@ class JsonFormatter(DictFormatter):
         return r
 
 class EmailFormatter(DictFormatter):
-    keys = ['name', 'msg', 'levelname', 'flask_path', 'flask_method','ID', 'asctime', 'db_created']
+    keys = ['name', 'msg', 'levelname', 'flask_path', 'flask_method','ID', 'asctime', 'db_created', 'exc_text']
     def format(self, record):
         d = super().format(record)
         try:
@@ -77,7 +77,7 @@ def set_up_logging():
     #No parameters to getLogger returns root logger
     root = logging.getLogger()
     root.setLevel(level=logging.DEBUG)
-    handler = logging.handlers.RotatingFileHandler('franca_link.log', maxBytes=10**6, backupCount=5)
+    handler = logging.handlers.RotatingFileHandler('franca_link.log', maxBytes=10**8, backupCount=5)
     formatter = JsonFormatter()
     handler.setFormatter(formatter)
     handler.addFilter(connections_filter())
