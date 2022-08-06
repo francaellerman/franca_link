@@ -38,7 +38,10 @@
         </div>
         <img src='static/landing_example.png'>
     </div>
-    <div v-if='errors' class="alert alert-danger text_card page_item" role="alert">
+    <div v-if='pdf_verification_exception' class="alert alert-danger text_card page_item" role="alert">
+        The file you uploaded is not a PDF in the right format. Re-read the instructions and see if you can find a different PDF file that follows the criteria. <a href='mailto:23ellerman2@lexingtonma.org'>You can email me</a> if you want more support.
+    </div>
+    <div v-else-if='errors' class="alert alert-danger text_card page_item" role="alert">
         [[errors]] I was emailed about it and depending on the information available, I may email your school email address about it. I would appreciate it if <a href='mailto:23ellerman2@lexingtonma.org'>you emailed me</a> either way.
     </div>
     <template v-if='started_uploading && !cookie && !errors'>
@@ -49,17 +52,24 @@
         <div class='spinner-border page_item'></div>
         <p>Getting connections...</p>
     </template>
-    <h3 class='page_item' v-if='!cookie && (!started_uploading || errors)'>Follow these steps</h3>
+    <h3 class='page_item' v-if='!cookie && (!started_uploading || errors)'>Follow these 3 steps</h3>
     <div id='instructions' v-show='!cookie && (!started_uploading || errors)'>
         <div class='text_card card card-body page_item'>
            <ol>
-               <li>Remember that schedule you got on Aspen in June that looked like this called 'Schedule_for_YOG_2023_from_Build.pdf'?</li>
+               <li>Remember that PDF schedule you got on Aspen in June that looked like this called 'Schedule_for_YOG_2023_from_Build.pdf'? Try to remember what device you used to download it from Aspen.</li>
                <img src='static/pre_schedule_screenshot.jpg'>
            </ol>
         </div>
-        <div class='card card-body page_item'>
+        <div class='card text_card card-body page_item'>
             <ol start='2'>
-               <li>If you can find where you put it, search and select 'Schedule_for_YOG_2023_from_Build.pdf' from your files.</li>
+               <li>Use this site on that device and search for 'Schedule_for_YOG_2023_from_Build.pdf' using the Browse button.
+                   <ul>
+                       <li>It must be the original PDF, not an image/screenshot or a PDF of an image/screenshot.</li>
+                       <li>Don't open and save the PDF in a different application.</li>
+                       <li>Using iCloud might be problematic.</li>
+                   </ul>
+               </li>
+               <li>Select 'Schedule_for_YOG_2023_from_Build.pdf' using the Browse button.</li>
             </ol>
             <input class='form-control form-control-{% if mobile %}sm{% else %}lg
                 {% endif %}

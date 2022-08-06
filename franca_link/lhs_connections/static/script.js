@@ -10,7 +10,7 @@ var app = createApp({
             name: '',
             connections: null,
             errors: null,
-            loona: 'Loona'
+            pdf_verification_exception: false
         }
     },
     async created() {
@@ -23,9 +23,20 @@ var app = createApp({
             const fileField = await document.querySelector('input[type="file"]');
             await formData.append('pdf', fileField.files[0]);
             //Cookie is put in browser with fetch's return
-            await fetch('api', {
-              method: 'POST',
-              body: formData
+            await fetch('api', {method: 'POST', body: formData}).then(async resp => {
+                    if(await resp.ok){
+                        let j = null
+                        let content_type = resp.headers.get('content-type')
+                        if (content_type.indexOf('application/json') !== -1) {
+                            j = await resp.json()
+                        }
+                        if (j == 'pdf_verification_exception') {
+                            this.pdf_verification_exception = true
+                        }
+                        else {
+                            this.pdf_verification_exception = false
+                        }
+                    }
             })
             await this.get_connections()
             if (await this.cookie) {

@@ -38,7 +38,7 @@ class JsonFormatter(DictFormatter):
         return r
 
 class EmailFormatter(DictFormatter):
-    keys = ['name', 'msg', 'levelname', 'flask_path', 'flask_method','ID', 'asctime', 'db_created', 'exc_text']
+    keys = ['name', 'msg', 'levelname', 'flask_path', 'flask_method','ID', 'asctime', 'db_created', 'pdf_verification_exception', 'exc_text']
     def format(self, record):
         d = super().format(record)
         try:
@@ -108,14 +108,18 @@ class wrapper_related:
                 'flask_method': flask.request.method},
                 **extra}
 
-    def info(self, message, id_=None, extra=None):
-        self.logger.info(message, extra=self.extra(id_))
+    def info(self, message, id_=None, extra={}):
+        self.logger.info(message, extra=self.extra(id_, extra))
 
-    def warning(self, message, id_=None, extra=None):
-        self.logger.warning(message, extra=self.extra(id_))
+    def warning(self, message, id_=None, extra={}):
+        self.logger.warning(message, extra=self.extra(id_, extra))
 
-    def exception(self, id_=None, extra=None):
-        self.logger.exception("Runtime exception", extra=self.extra(id_))
+    def exception(self, id_=None, extra={}):
+        if extra.get('pdf_verification_exception'):
+            message = "pdf_verification_exception"
+        else:
+            message = "Runtime exception"
+        self.logger.exception(message, extra=self.extra(id_, extra))
 
     def wrapper(self, message=None):
         def inner(func):

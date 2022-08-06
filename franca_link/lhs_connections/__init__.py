@@ -5,7 +5,6 @@ import pickle
 import datetime
 import os
 import pathlib
-import warnings
 import pkg_resources
 import pathlib
 import franca_link.lhs_connections.worker as worker
@@ -47,19 +46,8 @@ def post():
     file = None
     try:
         time = datetime.datetime.utcnow().isoformat()
-        with warnings.catch_warnings(record=True) as caught_warnings:
-            file = flask.request.files['pdf']
-            md = worker.get_metadata(file)
-            with pkg_resources.resource_stream('franca_link.lhs_connections', 'pdf_metadata.pickle') as f:
-                franca_md = pickle.load(f)
-            if not md['ModDate'] == md['CreationDate']:
-                raise Exception("Metadata does not fit the criteria: same mod and creation", md['ModDate'], md['CreationDate'])
-            if not md['Creator'] == franca_md['Creator']:
-                raise Exception("Metadata does not fit the criteria: same creator", md['Creator'], franca_md['Creator'])
-            if not md['Producer'] == franca_md['Producer']:
-                raise Exception("Metadata does not fit the criteria: same producer", md['Producer'], franca_md['Producer'])
-            if len(caught_warnings) > 0:
-                raise Exception("Getting PDF metadata raised a warning")
+        file = flask.request.files['pdf']
+        worker.verify_pdf(file)
         information = worker.get_pdf_info(file)
         if worker.returning_user_name(information['ID']):
             message = "Request success: returning user"
@@ -67,9 +55,11 @@ def post():
             file.seek(0)
             worker.insert_sql_data(information, time, file)
             message = "Request success"
-    except:
-        wrapper_related.exception(id_=information.get('ID'))
-        #Could download file if something goes wrong
+    except worker.pdf_verification_exception:
+        wrapper_related.exception(id_=information.get('ID'), extra={'db_created': time, 'pdf_verification_exception': True})
+        resp = flask.json.jsonify("pdf_verification_exception")
+    except Exception:
+        wrapper_related.exception(id_=information.get('ID'), extra={'db_created': time})
         flask.abort(500)
     else:
         wrapper_related.info(message, id_=information['ID'], extra={'db_created': time})

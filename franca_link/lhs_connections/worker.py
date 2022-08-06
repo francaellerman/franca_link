@@ -8,16 +8,40 @@ import sqlite3
 import pandas as pd
 import pkg_resources
 import subprocess
+import magic
+import warnings
 
 start = 'connections/'
 
 #Functions for getting data from any PDF
+
+#These shouldn't send an email in the end because that would be annoying
+class pdf_verification_exception(Exception):
+    pass
 
 def get_metadata(fp):
     #This was from some example
     parser = PDFParser(fp)
     doc = PDFDocument(parser)
     return doc.info[0]
+
+def verify_pdf(file):
+    mime = magic.from_buffer(file.read(2048))
+    if not mime == 'PDF document, version 1.4 (password protected)':
+        raise pdf_verification_exception(f"Mimetype {mime} is not the required type")
+    #Try to catch people trying to tamper with the files
+    with warnings.catch_warnings(record=True) as caught_warnings:
+        md = get_metadata(file)
+        with pkg_resources.resource_stream('franca_link.lhs_connections', 'pdf_metadata.pickle') as f:
+            franca_md = pickle.load(f)
+        if not md['ModDate'] == md['CreationDate']:
+            raise pdf_verification_exception("Metadata does not fit the criteria: same mod and creation", md['ModDate'], md['CreationDate'])
+        if not md['Creator'] == franca_md['Creator']:
+            raise pdf_verification_exception("Metadata does not fit the criteria: same creator", md['Creator'], franca_md['Creator'])
+        if not md['Producer'] == franca_md['Producer']:
+            raise pdf_verification_exception("Metadata does not fit the criteria: same producer", md['Producer'], franca_md['Producer'])
+        if len(caught_warnings) > 0:
+            raise Exception("Getting PDF metadata raised a warning")
 
 def get_pdf_text(f):
     return PyPDF2.PdfFileReader(f).getPage(0).extractText()
