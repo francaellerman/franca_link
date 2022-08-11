@@ -34,12 +34,12 @@ def verify_pdf(file):
         md = get_metadata(file)
         with pkg_resources.resource_stream('franca_link.lhs_connections', 'pdf_metadata.pickle') as f:
             franca_md = pickle.load(f)
-        if not md['ModDate'] == md['CreationDate']:
-            raise pdf_verification_exception("Metadata does not fit the criteria: same mod and creation", md['ModDate'], md['CreationDate'])
-        if not md['Creator'] == franca_md['Creator']:
-            raise pdf_verification_exception("Metadata does not fit the criteria: same creator", md['Creator'], franca_md['Creator'])
-        if not md['Producer'] == franca_md['Producer']:
-            raise pdf_verification_exception("Metadata does not fit the criteria: same producer", md['Producer'], franca_md['Producer'])
+        if not md.get('ModDate') == md['CreationDate']:
+            raise Exception("Metadata does not fit the criteria: same mod and creation", md.get('ModDate'), md.get('CreationDate'))
+        if not md.get('Creator') == franca_md['Creator']:
+            raise pdf_verification_exception("Metadata does not fit the criteria: same creator", md.get('Creator'), franca_md['Creator'])
+        if not md.get('Producer') == franca_md['Producer']:
+            raise pdf_verification_exception("Metadata does not fit the criteria: same producer", md.get('Producer'), franca_md['Producer'])
         if len(caught_warnings) > 0:
             raise Exception("Getting PDF metadata raised a warning")
 
@@ -61,7 +61,6 @@ def get_pdf_info(f):
     return info
 
 def returning_user_name(id_):
-    con = sqlite3.connect(start + 'connections.sql')
     return list(db("select name from students where id = ?", [int(id_)]))
 
 def db(*args, **kwargs):
@@ -81,8 +80,11 @@ def insert_sql_data(information, time, file):
     #id_df = pd.DataFrame({'student_id': [information['ID']], 'created': [time],
     #    'student_name': [information['name']]}, index=[])
     #id_df.to_sql('student_names', con=con, if_exists='append', index=False)
-    df = tabula.read_pdf(file,
-            pages='all')[0][['Course', 'Description', 'Term']]
+    df = tabula.read_pdf(file, pages='all')[0]
+    insert_sql_from_df(information, time, df)
+
+def insert_sql_from_df(information, time, df):
+    df = df[['Course', 'Description', 'Term']]
     df['student_id'] = int(information['ID'])
     df['created'] = time
     def split_course(row):

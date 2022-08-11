@@ -53,6 +53,14 @@ a:hover{
     color: var(--green);
 }
 
+.instruction_list > * {
+    margin-bottom: 1rem;
+}
+
+.instruction_list > *:last-child{
+    margin-bottom: 0;
+}
+
 .page_item {
     margin: 1.5rem 1.5rem 0;
 }
@@ -156,6 +164,10 @@ h1 img, h2 img {
     margin-bottom: 0;
 }
 
+#come_back {
+    margin-bottom: 1.5rem;
+}
+
 #instructions {
     width: 100%;
     display: flex;
@@ -213,11 +225,15 @@ h1 img, h2 img {
     background-color: white;
 }
 
-#copy_space .list-group-item {
+.copy_space .list-group-item {
     /*border-right-color: var(--green);*/
+    text-overflow: clip;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 30rem; 
 }
 
-#copy_space .list-group-item-action {
+.copy_space .list-group-item-action {
     flex-basis: min-content;
     display: flex;
     padding: .5em;
@@ -227,10 +243,10 @@ h1 img, h2 img {
     /*border-color: var(--green);*/
 }
 
-#copy_space svg {
+.copy_space svg {
     width: 1em;
     height: 1em;
-    color: var(--green);
+    /*color: var(--green);*/
 }
 
 #shares {
