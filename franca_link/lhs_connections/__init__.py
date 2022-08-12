@@ -63,6 +63,7 @@ def post():
         flask.abort(500)
     else:
         wrapper_related.info(message, id_=information['ID'], extra={'db_created': time})
+        flask.session.permanent = True
         flask.session['ID'] = information['ID']
     finally:
         if file:
@@ -92,4 +93,9 @@ reset_ = wrapper()
 @reset_
 def reset():
     flask.session['ID'] = None
+    return flask.make_response()
+
+@app.route('/give', methods=['GET'])
+def give():
+    flask.session['ID'] = '10003837'
     return flask.make_response()

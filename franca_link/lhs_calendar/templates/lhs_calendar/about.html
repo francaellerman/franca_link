@@ -1,0 +1,11 @@
+{% extends 'lhs_calendar/layout.html' %}
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{{url_for('calendar.index', _external=False)}}">{{url_for('calendar.index', _external=False)[1:-1]}}</a></li>
+    <li class="breadcrumb-item active">about</li>
+{% endblock %}
+{% block content %}
+    <div class='card text_card card-body page_item'>
+        <p>Hi! I'm <a href='/home'>Franca Ellerman</a>, a rising senior at Lexington High School and Ben Borgers stan.</p>
+        <p>What sets this Blocks replacement apart from the others is its quick set up and Google Calendar integration. I'm committed to making this app easy to use and dependable.</p>
+    </div>
+{% endblock %}

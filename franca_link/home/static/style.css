@@ -122,6 +122,18 @@ h1 img, h2 img {
     flex: initial;
 }
 
+#landing.calendar .card-body {
+    max-width: 25rem;
+}
+
+#landing.calendar h3 {
+    text-align: center;
+}
+
+#landing.calendar span {
+    color: var(--green);
+}
+
 #landing .card-body > div {
     align-items: start;
     display: flex;
