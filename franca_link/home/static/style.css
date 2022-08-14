@@ -115,6 +115,7 @@ h1 img, h2 img {
 #landing > img {
     width: 17.5rem;
     filter: drop-shadow(0 0 0.4rem var(--bs-gray-500));
+    border-radius: .75rem;
 }
 
 #landing .card-body{

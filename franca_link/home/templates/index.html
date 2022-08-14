@@ -3,6 +3,9 @@
     </head>
         <body>
 {% endblock %}
+{% block icon_link %}
+/static/Icon.png
+{% endblock %}
 {% block title %}
     franca.link
 {% endblock %}
@@ -11,15 +14,15 @@
 {% endblock %}
 {% block content %}
     <div class='card card-body page_item title_card'>
-        <h2><img src='{{url_for('calendar.static', filename='Icon.png')}}'> <a href='{{url_for('calendar.index', _external=False)}}'>Quickly</a></h2>
+        <h2><img src='{{url_for('calendar.static', filename='Icon.png')}}'> <a href='{{url_for('calendar.index', _external=False)}}'>Quickly for LHS</a></h2>
         <p>My Blocks/Daily replacement</p>
     </div>
     <div class='card card-body page_item title_card'>
-        <h2><img src='{{url_for('connections.static', filename='Icon.png')}}'> <a href='connections'>LHS 2023 Connections</a></h2>
+        <h2><img src='{{url_for('connections.static', filename='Icon.png')}}'> <a href='{{url_for('connections.index', _external=False)}}'>LHS 2023 Connections</a></h2>
         <p>See who's in your classes next year. Currently has over 8% of the senior class.</p>
     </div>
     <div class='card card-body page_item title_card'>
-        <h2><img src='{{url_for('calculator.static', filename='Icon.png')}}'> <a href='calculator'>LHS Admissions Calculator</a></h2>
+        <h2><img src='{{url_for('calculator.static', filename='Icon.png')}}'> <a href='/calculator'>LHS Admissions Calculator</a></h2>
         <p>See what percent of LHS students with your GPA and SAT historically got into various colleges</p>
     </div>
 {% endblock %}

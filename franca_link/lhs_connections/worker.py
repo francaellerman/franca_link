@@ -81,9 +81,9 @@ def insert_sql_data(information, time, file):
     #    'student_name': [information['name']]}, index=[])
     #id_df.to_sql('student_names', con=con, if_exists='append', index=False)
     df = tabula.read_pdf(file, pages='all')[0]
-    insert_sql_from_df(information, time, df)
+#    insert_sql_from_df(information, time, df)
 
-def insert_sql_from_df(information, time, df):
+#def insert_sql_from_df(information, time, df):
     df = df[['Course', 'Description', 'Term']]
     df['student_id'] = int(information['ID'])
     df['created'] = time

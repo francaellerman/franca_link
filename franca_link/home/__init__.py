@@ -39,7 +39,7 @@ def slash():
     return flask.redirect(flask.url_for('calendar.index'))
 
 _index = wrapper()
-@app.route('/home', methods=['GET'])
+@app.route('/home/', methods=['GET'])
 @_index
 def index():
     return flask.render_template('index.html')

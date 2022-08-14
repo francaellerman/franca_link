@@ -420,7 +420,7 @@ def make_sql_databases():
     cursor = con.cursor()
     #It's unclear if the sections are unique to each term or not
     #This isn't autoincrement for a reason I can't remember
-    cursor.execute("create table students(name text, hr int, primary key (name, hr))")
+    cursor.execute("create table students(name text, hr int, privacy text, primary key (name, hr))")
     cursor.execute("create table courses(id text primary key, created text, Description text, Level text)")
     cursor.execute("create table sections(course_no text, Term text, section int, created text, Room text, Teacher text, Schedule text, primary key (course_no, Term, section), foreign key(course_no) references courses(id))")
     cursor.execute("create table enrollments(id integer primary key, created text, student_name text, student_hr int, course_no text, section int, Term text, foreign key (course_no, section, Term) references sections (course_no, section, Term))")
