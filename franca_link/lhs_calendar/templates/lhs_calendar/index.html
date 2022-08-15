@@ -88,14 +88,14 @@
             </div>
         </div>
     {% else %}
-        <h3 id='come_back' class='page_item pad'>Come back when schedules drop on Aspen!</h3>
+        <h3 id='come_back' class='page_item pad'>Come back this Wednesday when schedules drop on Aspen!</h3>
     {% endif %}
     <template v-if='ics_link'>
-        <h4 class='page_item'>See your calendar</h4>
+        {#<h4 class='page_item'>See your calendar</h4>#}
         <div class='page_item'>
             <div class='card text_card card-body'>
                 <ol start='3' class='instruction_list'>
-                    <li>Click the clipboard button to copy the URL</li>
+                    <li>Click the clipboard button to copy the code.</li>
                     <ul class='copy_space list-group list-group-horizontal'>
                         <li class='list-group-item'>
                             [[ics_link]]
@@ -107,39 +107,19 @@
                                 </svg>
                         </li>
                     </ul>
-                    <li>Open the Google Calendar website <a href="https://calendar.google.com/" rel="noopener" target="_blank">here</a>, not the app.</li>
-                    <li>See where to paste your link with this GIF</li>
+                    <li>Open <a href="https://calendar.google.com/" rel="noopener" target="_blank">the Google Calendar website</a>.</li>
+                    <li>Log into the Google account you want to see your schedule in (school, personal, or both).</li>
+                    <li>See where to paste the code by following this GIF.</li>
+                    <img src='static/google_calendar.gif'>
+                    {% if mobile == 'iphone' %}
+                    <li>I recommend <a href='https://itunes.apple.com/app/apple-store/id909319292?pt=9008&ct=web_about&mt=8' target='_blank'>downloading the Google Calendar app</a>.</li>
+                    {% else %}
+                    <li>I recommend downloading the Google Calendar app on your phone.</li>
+                    {% endif %}
+                    <li>In up to a minute you'll see a calendar called "[[name]]'s Quickly Calendar" on the Google Calendar website and app. Change its color to your favorite color!</li>
                 </ol>
             </div>
             <div class='accordion' id='accordion'>
-                <div class='accordion-item'>
-                    <p class="accordion-header" id="heading_one">
-                        <button class="accordion-button" type='button'
-                            data-bs-toggle="collapse"
-                            data-bs-target="#collapse_one"
-                            aria-expanded='false'
-                            aria-controls='collapse_one'>
-                            For Google Calendar
-                        </button>
-                    </p>
-                    <div id="collapse_one"
-                        class="accordion-collapse"
-                        aria-labelledby="heading_one"
-                        data-bs-parent="#accordion">
-                        <div class='accordion-body card-body text_card'>
-                            <ol start='4'>
-                                <li>Open the <a href="https://calendar.google.com/" rel="noopener" target="_blank">Google Calendar</a> website, not the app.</li>
-                                <li>On the left, next to "Other calendars," click <img src="//lh3.googleusercontent.com/acEIXV8pLgZ5PXG23uIE9Ioz8RISJeLeAUH8WlHFipigJvssMhq20nQgEWQcqWn1iyM=w36-h36" alt="Add other calendars" data-mime-type="image/png" data-alt-src="//lh3.googleusercontent.com/acEIXV8pLgZ5PXG23uIE9Ioz8RISJeLeAUH8WlHFipigJvssMhq20nQgEWQcqWn1iyM" width="18" height="18">&nbsp;<img src="//lh3.googleusercontent.com/3_l97rr0GvhSP2XV5OoCkV2ZDTIisAOczrSdzNCBxhIKWrjXjHucxNwocghoUa39gw=w36-h36" alt="and then" data-mime-type="image/png" data-alt-src="//lh3.googleusercontent.com/3_l97rr0GvhSP2XV5OoCkV2ZDTIisAOczrSdzNCBxhIKWrjXjHucxNwocghoUa39gw" width="18" height="18"> <strong>From URL.</strong></li>
-                                <img src='static/other_calendars.png'>
-                                <li>Paste the URL you just copied.</li>
-                                <li>Click <strong>Add calendar. </strong></li>
-                                <img src='static/from_url_wizard.png'>
-                                <li>It can take a minute to load the first time. Once it does, you can see it on any Google Calendar app and website logged in to your Google account.</li>
-                            </ol>
-                            <p>Instructions partly from Google Support</p>
-                        </div>
-                    </div>
-                </div>
                 <div class='accordion-item'>
                     <p class="accordion-header" id="heading_two">
                         <button class="accordion-button collapsed" type='button'
