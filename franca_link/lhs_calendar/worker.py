@@ -376,7 +376,7 @@ class Find_and_replace:
                     func(*func_args, subcomponent)
 
 def get_fernet():
-    with open('lhs_calendar_fernet.txt', 'rb') as f:
+    with open('/etc/franca_link/lhs_calendar_fernet.txt', 'rb') as f:
         return Fernet(f.read())
 
 def make_ics_query_string(information):
