@@ -202,13 +202,28 @@ h1 img, h2 img {
     margin-bottom: 1.5rem;
 }
 
-#instructions ol img {
+/*#instructions*/ ol img {
     max-width: 100%;
     max-height: 100%;
 }
 
 #instructions .card-body input {
     margin: auto;
+}
+
+#fine_print {
+    font-size: .75rem;
+    margin-top: .5rem;
+}
+
+#error_modal .modal-content{
+    color: #842029;
+    background-color: #f8d7da;
+    border-color: #842029;
+}
+
+#error_modal .modal-header {
+    border-color: #842029;
 }
 
 #name {

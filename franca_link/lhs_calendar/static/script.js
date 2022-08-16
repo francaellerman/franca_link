@@ -14,6 +14,12 @@ var app = createApp({
             ics_link: null
         }
     },
+    watch: {
+        errors: function (value) {
+            let modal = new bootstrap.Modal(document.getElementById('error_modal'), {})
+            modal.show()
+        }
+    },
     async created() {
         this.get_api()
     },

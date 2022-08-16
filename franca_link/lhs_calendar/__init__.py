@@ -9,6 +9,7 @@ import pkg_resources
 import pathlib
 import franca_link.lhs_calendar.worker as worker
 import franca_link.my_logging as my_logging
+import yaml
 
 wrapper_related = my_logging.wrapper_related('franca_link.calendar')
 wrapper = wrapper_related.wrapper
@@ -21,10 +22,23 @@ index_ = wrapper()
 @app.route('/', methods=['GET'])
 @index_
 def index():
+    global config_
     user_agent = flask.request.headers.get('User-Agent').lower()
-    if 'iphone' in user_agent or 'android' in user_agent: mobile = True
+    if 'iphone' in user_agent: mobile = 'iphone'
+    elif 'android' in user_agent: mobile = 'android'
     else: mobile = False
-    return flask.render_template('lhs_calendar/index.html', mobile=mobile, open_=worker.config_dict['open'])
+    return flask.render_template('lhs_calendar/index.html', mobile=mobile, open_=worker.config_dict['open'], config_=worker.config_dict)
+
+open_ = wrapper()
+@app.route('/open_sesame', methods=['GET'])
+@open_
+def open():
+    global config_
+    user_agent = flask.request.headers.get('User-Agent').lower()
+    if 'iphone' in user_agent: mobile = 'iphone'
+    elif 'android' in user_agent: mobile = 'android'
+    else: mobile = False
+    return flask.render_template('lhs_calendar/index.html', mobile=mobile, open_=True, config_=worker.config_dict)
 
 about_ = wrapper()
 @app.route('/about', methods=['GET'])
