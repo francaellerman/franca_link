@@ -88,18 +88,31 @@
                <ol>
                    <li>Go to <a href='https://ma-lexington.myfollett.com/aspen/logon.do' target='_blank'>Aspen</a>.</li>
                    {% if mobile %}
-                   <li>Scroll down, click on 'Published Reports', and click on '{{aspen_file_name}}' to download it.</li>
+                       <li>Scroll down, tap 'Published Reports', and tap '{{config_['aspen_file_name']}}'.</li>
                        <img src='static/mobile_aspen.jpg'>
+                       {% if browser == 'safari'%}
+                           <li>Tap the middle share button.</li>
+                           <img src='static/iphone_safari_share_button.jpg'>
+                           <li>Tap 'Save to Files'</li>
+                           <img src='static/iphone_safari_save_to_files.jpg'>
+                           <li>Tap 'On My iPhone' and 'Save'</li>
+                       {% elif mobile == 'iphone' and browser == 'chrome' %}
+                           <li>Click on the Download button at the bottom of your screen</li>
+                           <img src='static/iphone_chrome_download.jpg'>
+                       {% else %}
+                           <li>Make sure the file is downloaded in some way, whether it be automatically downloaded or you have to click on some things.</li>
+                       {% endif %}
                    {% else %}
-                   <li>Click on '{{aspen_file_name}}' under 'Published Reports' to download it.</li>
-                       <img src='static/computer_aspen.jpg'>
+                       <li>Click on '{{config_['aspen_file_name']}}' under 'Published Reports' to download it.</li>
+                       <img src='static/computer_aspen.png'>
+                       {% if browser == 'safari' %}
+                           <li>If prompted to accept downloads from Aspen, accept.</li>
+                       {% endif %}
                    {% endif %}
                </ol>
             </div>
             <div class='card card-body page_item'>
-                <ol start='3'>
-                    <li>Click below to search and select '{{aspen_file_name}}' from your files.</li>
-                </ol>
+                <p>Next, click below to search and select '{{aspen_file_name}}' from your files.</p>
                 <input class='form-control form-control-{% if mobile %}sm{% else %}lg
                     {% endif %}
                 ' @change='upload' type='file' accept='.pdf'>
@@ -113,8 +126,8 @@
         {#<h4 class='page_item'>See your calendar</h4>#}
         <div class='page_item'>
             <div class='card text_card card-body'>
-                <ol start='3' class='instruction_list'>
-                    <li>Click the clipboard button to copy the code.</li>
+                <ol class='instruction_list'>
+                    <li>Now click the clipboard button to copy the code.</li>
                     <ul class='copy_space list-group list-group-horizontal'>
                         <li class='list-group-item'>
                             [[ics_link]]

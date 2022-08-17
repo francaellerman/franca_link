@@ -38,7 +38,7 @@ class JsonFormatter(DictFormatter):
         return r
 
 class EmailFormatter(DictFormatter):
-    keys = ['name', 'msg', 'levelname', 'flask_path', 'flask_method','ID', 'asctime', 'db_created', 'pdf_verification_exception', 'exc_text', 'args']
+    keys = ['name', 'msg', 'levelname', 'flask_path', 'flask_method','calendar_name','calendar_hr', 'ID', 'asctime', 'db_created', 'pdf_verification_exception', 'exc_text', 'args']
     def format(self, record):
         d = super().format(record)
         try:

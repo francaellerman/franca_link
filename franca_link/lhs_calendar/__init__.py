@@ -23,11 +23,13 @@ index_ = wrapper()
 @index_
 def index():
     global config_
-    user_agent = flask.request.headers.get('User-Agent').lower()
-    if 'iphone' in user_agent: mobile = 'iphone'
-    elif 'android' in user_agent: mobile = 'android'
+    browser = flask.request.user_agent.browser
+    platform = flask.request.user_agent.platform
+    #user_agent = flask.request.headers.get('User-Agent').lower()
+    if platform == 'iphone' or platform == 'ipad': mobile = 'iphone'
+    elif platform == 'android': mobile = 'android'
     else: mobile = False
-    return flask.render_template('lhs_calendar/index.html', mobile=mobile, open_=worker.config_dict['open'], config_=worker.config_dict)
+    return flask.render_template('lhs_calendar/index.html', platform=platform, browser=browser, mobile=mobile, open_=worker.config_dict['open'], config_=worker.config_dict)
 
 open_ = wrapper()
 @app.route('/open_sesame', methods=['GET'])
