@@ -15,13 +15,13 @@ import icalendar as ical
 import yaml
 import pytz
 import datetime
-from cryptography.fernet import Fernet
 import urllib.parse
 import franca_link.my_logging as my_logging
 import magic
 import warnings
 import io
 import requests
+import pyffx
 
 start = 'calendar/'
 
@@ -32,6 +32,8 @@ my_logger = my_logging.wrapper_related('franca_link.calendar')
 #These shouldn't send an email in the end because that would be annoying
 class pdf_verification_exception(Exception):
     pass
+
+pyffx_length = 10
 
 with open('/etc/franca_link/lhs_calendar_config.yaml', 'rb') as f:
     config_dict = yaml.safe_load(f)
@@ -213,7 +215,7 @@ class LHS_Calendar:
         ex = db("select course_no, description, level, term, room, teacher, schedule from enrollments join courses on enrollments.course_no = courses.id join sections using(course_no, section, term) where student_name = ? and student_hr = ?", [name, hr])
         assert len(ex) > 0
         [self.make_block(row) for row in ex]
-        self.cal['X-WR-CALNAME'] = f"{format_name(name)}'s Quickly calendar"
+        self.cal['X-WR-CALNAME'] = f"Quickly: {format_name(name)}'s calendar"
         self.cal['X-WR-CALDESC'] = "Your Quickly calendar. Should sync up to every 12 hours."
         self.dates_to_lunches = {'S 1':{}, 'S 2':{}}
         [[[self.edit_event(func, semester, subcomponent) for subcomponent in
@@ -375,25 +377,20 @@ class Find_and_replace:
                 if not period or (time >= period[0] and time < period[1]):
                     func(*func_args, subcomponent)
 
-def get_fernet():
-    with open('/etc/franca_link/lhs_calendar_fernet.txt', 'rb') as f:
-        return Fernet(f.read())
+def ffx_key():
+    return str.encode(config_dict['ffx_secret_key'])
 
 def make_ics_query_string(information):
-    fernet = get_fernet()
-    def make_query(data):
-        return urllib.parse.quote_plus(fernet.encrypt(data).decode())
-    return f"?0={make_query(str.encode(information['name']))}&1={make_query(int(information['hr']).to_bytes(2, byteorder='big'))}"
+    hr = int(information['hr'])
+    enc = pyffx.Integer(ffx_key(), length=pyffx_length).encrypt(hr)
+    enco_hr = urllib.parse.quote_plus(str(enc))
+    return f"?0={urllib.parse.quote_plus(information['name'])}&1={enco_hr}"
 
-def get_user_calendar(enc_name, enc_hr):
-    fernet = get_fernet()
+def get_user_calendar(name, enc_hr):
     #Flask should have already decoded the strings before this function
     #I'm a little concerned about using urllib to encode the queries but letting
     #Flask decode the queries since they could do it differently
-    def decode_query(string):
-        return fernet.decrypt(str.encode(string))
-    name = decode_query(enc_name).decode()
-    hr = int.from_bytes(decode_query(enc_hr), 'big')
+    hr = pyffx.Integer(ffx_key(), length=pyffx_length).decrypt(int(enc_hr))
     return LHS_Calendar(name, hr).ical
 
 def get_connections(information):
@@ -438,10 +435,6 @@ def load_official_calendar():
     #I don't _think_ I need delete old_calendar.ics?
     os.rename(start + 'calendar.ics', start + 'old_calendar.ics')
     os.rename(start + 'new_calendar.ics', start + 'calendar.ics')
-
-def make_fernet_key():
-    with open('lhs_calendar_fernet.txt', 'wb') as f:
-        f.write(Fernet.generate_key())
 
 def make_sql_databases():
     con = sqlite3.connect(start + "calendar.sql")
