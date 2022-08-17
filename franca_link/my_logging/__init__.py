@@ -45,7 +45,7 @@ class EmailFormatter(DictFormatter):
             d['ID'] = EmailFormatter.returning_user_name(d['ID'])
         except:
             pass
-        body = [f'{key}:\n              {d.get(key)}' for key in EmailFormatter.keys]
+        body = [f'{key}:\n              {d.get(key)}' for key in d]
         return '\n'.join(body)
     def returning_user_name(id_):
         con = sqlite3.connect('connections/connections.sql')
