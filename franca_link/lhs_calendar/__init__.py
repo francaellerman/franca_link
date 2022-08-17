@@ -72,7 +72,7 @@ def post():
         wrapper_related.exception(extra={'db_created': time, 'pdf_verification_exception': True, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr')})
         resp = flask.json.jsonify("pdf_verification_exception")
     except:
-        wrapper_related.exception(extra={'db_created': time, 'pdf_verification_exception': True, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr')})
+        wrapper_related.exception(extra={'db_created': time, 'pdf_verification_exception': False, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr')})
         flask.abort(500)
     else:
         wrapper_related.info(message, extra={'db_created': time, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr')})
