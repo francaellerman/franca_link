@@ -13,7 +13,7 @@
                           <path d="M8.5 5.6a.5.5 0 1 0-1 0v2.9h-3a.5.5 0 0 0 0 1H8a.5.5 0 0 0 .5-.5V5.6z"/>
                           <path d="M6.5 1A.5.5 0 0 1 7 .5h2a.5.5 0 0 1 0 1v.57c1.36.196 2.594.78 3.584 1.64a.715.715 0 0 1 .012-.013l.354-.354-.354-.353a.5.5 0 0 1 .707-.708l1.414 1.415a.5.5 0 1 1-.707.707l-.353-.354-.354.354a.512.512 0 0 1-.013.012A7 7 0 1 1 7 2.071V1.5a.5.5 0 0 1-.5-.5zM8 3a6 6 0 1 0 .001 12A6 6 0 0 0 8 3z"/>
                         </svg>
-                        <p>No sign-up. No manually inputting classes. Fast.</p>
+                        <p>No sign-up. No manually inputting classes. Quick.</p>
                     </div>
                     <div class='list_item'>
                         {#<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-app" viewBox="0 0 16 16">
@@ -127,14 +127,15 @@
                     </ul>
                     <li>Open <a href="https://calendar.google.com/" rel="noopener" target="_blank">the Google Calendar website</a>.</li>
                     <li>Log into the Google account you want to see your schedule in (school, personal, or both).</li>
-                    <li>See where to paste the code by following this GIF.</li>
+                    <li>See where to paste the code by following this GIF. At the end you should get a message saying "Calendar created. Fetching events in the background." at the bottom of your screen. If you don't, try again in a few minutes.</li>
                     <img src='static/google_calendar.gif'>
                     {% if mobile == 'iphone' %}
                     <li>I recommend <a href='https://itunes.apple.com/app/apple-store/id909319292?pt=9008&ct=web_about&mt=8' target='_blank'>downloading the Google Calendar app</a>.</li>
                     {% else %}
                     <li>I recommend downloading the Google Calendar app on your phone.</li>
                     {% endif %}
-                    <li>After about a minute, you'll see a calendar called "[[name]]'s Quickly Calendar" on the Google Calendar website and app. Change its color to your favorite color!</li>
+                    
+                    <li>You'll see a calendar called "Quickly: [[name]]'s calendar" on the Google Calendar website and app. Change its color to your favorite color! Your blocks will load at random and take about a minute.</li>
                 </ol>
             </div>
             <div class='accordion' id='accordion'>
