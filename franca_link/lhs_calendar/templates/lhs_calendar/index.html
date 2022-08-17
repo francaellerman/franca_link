@@ -75,7 +75,7 @@
     </div>
     <template v-if='started_uploading && !cookie && !errors'>
         <div class='spinner-border page_item'></div>
-        <p>Uploading...</p>
+        <p>Uploading... (This may take a while during high traffic)</p>
     </template>
     <template v-else-if='cookie && !connections && !errors'>
         <div class='spinner-border page_item'></div>
@@ -107,7 +107,7 @@
             </div>
         </div>
     {% else %}
-        <h3 id='come_back' class='page_item pad'>Come back this Wednesday when schedules drop on Aspen!</h3>
+        <h3 id='come_back' class='page_item pad'>Come back shortly after schedules drop today!</h3>
     {% endif %}
     <template v-if='ics_link'>
         {#<h4 class='page_item'>See your calendar</h4>#}
