@@ -66,8 +66,7 @@ def post():
         #if worker.returning_user_name(information['ID']):
         #    message = "Request success: returning user"
         file.seek(0)
-        try: worker.insert_sql_data(information, time, file)
-        except: import pdb; pdb.post_mortem()
+        worker.insert_sql_data(information, time, file)
         message = "Request success"
     except worker.pdf_verification_exception:
         wrapper_related.exception(extra={'db_created': time, 'pdf_verification_exception': True, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr')})
