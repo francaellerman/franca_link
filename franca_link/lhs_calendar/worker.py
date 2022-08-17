@@ -125,7 +125,7 @@ def insert_sql_data(information, time, file):
 
 def insert_df_in_sql(information, time, df, debug=False):
     df = df.dropna()[['Course','Level','Description', 'Room','Teacher','Term','Schedule']]
-    df = df.loc[1:]
+    df = df[df['Schedule'] != 'Adv']
     delete_previous_rows(information)
     db("insert into students(name, hr, created, privacy) values(?,?,?, ?) on conflict(name, hr) do nothing", [information['name'], information['hr'], time, 'Default'])
     #empty cells are outputted as nans. dropnan deletes rows with nans like
