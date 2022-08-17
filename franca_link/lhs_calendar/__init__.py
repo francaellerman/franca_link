@@ -38,7 +38,7 @@ def open():
     if 'iphone' in user_agent: mobile = 'iphone'
     elif 'android' in user_agent: mobile = 'android'
     else: mobile = False
-    return flask.render_template('lhs_calendar/index.html', mobile=mobile, open_=True, config_=worker.config_dict)
+    return flask.render_template('lhs_calendar/index.html', mobile=mobile, open_=True, config_=worker.config_dict, sesame=True)
 
 about_ = wrapper()
 @app.route('/about', methods=['GET'])
