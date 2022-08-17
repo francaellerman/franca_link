@@ -105,6 +105,7 @@ class wrapper_related:
         return {**{'IP': ip, 'ID': student_id,
                 'ignore': flask.request.cookies.get('ignore'),
                 'flask_path': flask.request.path,
+                'flask_query': flask.request.args,
                 'flask_method': flask.request.method},
                 **extra}
 
