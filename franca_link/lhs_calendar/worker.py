@@ -123,8 +123,27 @@ def insert_sql_data(information, time, file):
     df = tabula.read_pdf(file, pages=1)[0]
     insert_df_in_sql(information, time, df)
 
+def separate_df(df):
+    closies = [['Description','Room'], ['Teacher', 'Term']]
+    def teacher_room(value):
+        return [value[:-3 - 1], value[-3:]]
+    def separate_col(closie, col):
+        nonlocal closies
+        if closie == 0:
+            df[closies[closie]] = df[col].str.split(' ', 1, expand=True)
+        else:
+            df[closies[closie][0]] = df[col].apply(lambda value: value[:-3 -1])
+            df[closies[closie][1]] = df[col].apply(lambda value: value[-3:])
+    def check_separate_col(col):
+        nonlocal closies
+        for closie in range(2):
+            if closies[closie][0] in col and closies[closie][1] in col:
+                separate_col(closie, col)
+    [check_separate_col(col) for col in df.columns]
+
 def insert_df_in_sql(information, time, df, debug=False):
-    df = df.dropna()[['Course','Level','Description', 'Room','Teacher','Term','Schedule']]
+    separate_df(df)
+    df = df[['Course','Level','Description', 'Room','Teacher','Term','Schedule']].dropna()
     df = df[df['Schedule'] != 'Adv']
     delete_previous_rows(information)
     db("insert into students(name, hr, created, privacy) values(?,?,?, ?) on conflict(name, hr) do nothing", [information['name'], information['hr'], time, 'Default'])
