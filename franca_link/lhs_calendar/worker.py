@@ -63,12 +63,12 @@ def verify_pdf(file, time):
         md = get_metadata(file)
         with pkg_resources.resource_stream('franca_link.lhs_connections', 'pdf_metadata.pickle') as f:
             franca_md = pickle.load(f)
-        if not md['ModDate'] == md['CreationDate']:
-            my_logger.warning("Metadata does not fit the criteria: same mod and creation", md['ModDate'], md['CreationDate'])
-        if not md['Creator'] == b'JasperReports (StudentScheduleHighSchool)':
-            raise pdf_verification_exception("Metadata does not fit the criteria: same creator", md['Creator'])
-        if not md['Producer'] == b'iText 2.1.5 (by lowagie.com)':
-            raise pdf_verification_exception("Metadata does not fit the criteria: same producer", md['Producer'], franca_md['Producer'])
+        if not md.get('ModDate') == md.get('CreationDate'):
+            my_logger.warning("Metadata does not fit the criteria: same mod and creation", md.get('ModDate'), md.get('CreationDate'))
+        if not md.get('Creator') == b'JasperReports (StudentScheduleHighSchool)':
+            raise pdf_verification_exception("Metadata does not fit the criteria: same creator", md.get('Creator'))
+        if not md.get('Producer') == b'iText 2.1.5 (by lowagie.com)':
+            raise pdf_verification_exception("Metadata does not fit the criteria: same producer", md.get('Producer'))
         if len(caught_warnings) > 0:
             raise Exception("Getting PDF metadata raised a warning")
     first_year = str(config['semester_periods'][0][0])
@@ -120,6 +120,7 @@ def delete_previous_rows(information):
     #return False
 
 def insert_sql_data(information, time, file):
+    assert not information['name'].find(',') == -1
     df = tabula.read_pdf(file, pages=1)[0]
     insert_df_in_sql(information, time, df)
 

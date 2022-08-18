@@ -16,12 +16,12 @@
         Announcement
       </div>
       <div class="card-body">
-        <h5 class="card-title">LHS 2023 Connections will be out-of-date on Wednesday, Aug 17</h5>
-        <p class="card-text">Lexington High School is releasing everyone's real updated schedules on Wednesday, August 17. Some people's classes may change. To join the updated classmate lists and see your schedule and lunches, use Quickly starting Wednesday!</p>
+        <h5 class="card-title">LHS 2023 Connections is out-of-date</h5>
+        <p class="card-text">Lexington High School has released everyone's schedules. To see your updated connections, use my new schedule app that currently has over 10% of LHS students called Quickly.</p>
         <a href="/quickly" class="btn btn-success">Go to Quickly</a>
       </div>
     </div>
-    <div id='landing' class='page_item' v-if='!cookie && !started_uploading'>
+    {#<div id='landing' class='page_item' v-if='!cookie && !started_uploading'>
         <div class='card-body'>
             <h3>See who's in your classes next year</h3>
             <div>
@@ -146,7 +146,7 @@
                     </div>
                 </div>
             </div>
-    </template>
+    </template>#}
 {% endblock %}
 {% block more_buttons %}
     <a class='btn btn-outline-success page_item' href='about' role='button'>
@@ -155,11 +155,11 @@
         </svg>
         About
     </a>
-    <button @click='reset' type='button' class='btn btn-outline-success page_item'>
+    {#<button @click='reset' type='button' class='btn btn-outline-success page_item'>
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
           <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
           <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
         </svg>
         Change user
-    </button>
+    </button>#}
 {% endblock %}

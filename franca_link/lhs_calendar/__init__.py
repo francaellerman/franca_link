@@ -22,6 +22,9 @@ index_ = wrapper()
 @app.route('/', methods=['GET'])
 @index_
 def index():
+    if not flask.session.get('post_op_teacher_term_reload'):
+        flask.session.clear()
+        flask.session['post_op_teacher_term_reload'] = True
     global config_
     browser = flask.request.user_agent.browser
     platform = flask.request.user_agent.platform

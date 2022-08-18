@@ -3,7 +3,6 @@
 <li class="breadcrumb-item active">{{url_for('calendar.index', _external=False)[1:-1]}}</li>
 {% endblock %}
 {% block content %}
-<p>{%if sesame %}yes sesame{%endif%}</p>
     <div id='landing' class='page_item calendar' v-if='!cookie && !started_uploading'>
         <div class='card-body'>
             <h3>The quickest way to your <span>schedule</span> and <span>classmates</span></h3>
