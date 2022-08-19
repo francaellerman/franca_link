@@ -92,7 +92,11 @@ def between(base, str1, str2):
 def get_pdf_info(time):
     info = {}
     text = get_pdf_text(time)
-    info['name'] = between(text, '', '\n')
+    #info['name'] = between(text, '', '\n')
+    comma = text.find(',')
+    start = text.rfind('\n',0,comma) + 1
+    end = text.find('\n', comma, -1)
+    info['name'] = text[start:end]
     info['hr'] = between(text, 'HR:\n\n', '\n')
     return info
 
@@ -147,7 +151,7 @@ def insert_df_in_sql(information, time, df, debug=False):
     df = df[['Course','Level','Description', 'Room','Teacher','Term','Schedule']].dropna()
     df = df[df['Schedule'] != 'Adv']
     delete_previous_rows(information)
-    db("insert into students(name, hr, created, privacy) values(?,?,?, ?) on conflict(name, hr) do nothing", [information['name'], information['hr'], time, 'Default'])
+    db("insert into students(name, hr, created, privacy) values(?,?,?, ?) on conflict(name, hr) do update set created = excluded.created", [information['name'], information['hr'], time, 'Default'])
     #empty cells are outputted as nans. dropnan deletes rows with nans like
     #counselor seminars and I-block
     #No one cares about credits

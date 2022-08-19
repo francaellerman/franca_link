@@ -106,6 +106,7 @@ class wrapper_related:
                 'ignore': flask.request.cookies.get('ignore'),
                 'flask_path': flask.request.path,
                 'flask_query': flask.request.args,
+                'flask_session': flask.session,
                 'flask_method': flask.request.method},
                 **extra}
 
