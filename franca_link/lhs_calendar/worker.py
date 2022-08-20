@@ -261,6 +261,13 @@ class LHS_Calendar:
                 break
             except FileNotFoundError:
                 continue
+        self.time_ = datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+        event = ical.Event()
+        event['summary'] = self.time_
+        event['last-modified'] = self.time_
+        event['dtstart'] = '20220630T000000Z'
+        event['dtend'] = '20220630T240000Z'
+        self.cal.add_component(event)
         tz = Find_and_replace.tz(self.cal)
         self.blocks = {"S 1": {}, "S 2": {}}
         self.lunches = {"S 1": [None]*6, "S 2": [None]*6}
@@ -333,6 +340,7 @@ class LHS_Calendar:
             #If period is None, the period is assumed to be always
             if semester is None or (time >= LHS_Calendar.semester_periods[semester][0]
                 and time < LHS_Calendar.semester_periods[semester][1]):
+                subcomponent['LAST-MODIFIED'] = self.time_
                 func(self, semester, subcomponent)
 
     def special_edit_event(self, semester, event):
