@@ -62,14 +62,7 @@ def post():
         file = flask.request.files['pdf']
         if file:
             file.save(os.path.join(start + "pdfs", f'{time}.pdf'))
-        file.seek(0)
-        worker.verify_pdf(file, time)
-        file.seek(0)
-        information = worker.get_pdf_info(time)
-        #if worker.returning_user_name(information['ID']):
-        #    message = "Request success: returning user"
-        file.seek(0)
-        worker.insert_sql_data(information, time, file)
+        information = worker.process_pdf(file, time)
         message = "Request success"
     except worker.pdf_verification_exception:
         wrapper_related.exception(extra={'db_created': time, 'pdf_verification_exception': True, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr')})

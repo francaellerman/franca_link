@@ -69,11 +69,13 @@ def verify_pdf(file, time):
         with pkg_resources.resource_stream('franca_link.lhs_connections', 'pdf_metadata.pickle') as f:
             franca_md = pickle.load(f)
         if not md.get('ModDate') == md.get('CreationDate'):
-            my_logger.warning("Metadata does not fit the criteria: same mod and creation", md.get('ModDate'), md.get('CreationDate'))
+            my_logger.warning(f"Metadata does not fit the criteria: same mod and creation, {md.get('ModDate')}, {md.get('CreationDate')}", extra={'db_created': time})
         if not md.get('Creator') == b'JasperReports (StudentScheduleHighSchool)':
             raise pdf_verification_exception("Metadata does not fit the criteria: same creator", md.get('Creator'))
         if not md.get('Producer') == b'iText 2.1.5 (by lowagie.com)':
             raise pdf_verification_exception("Metadata does not fit the criteria: same producer", md.get('Producer'))
+        if not md.get('ModDate') == md.get('CreationDate'):
+            my_logger.warning(f"Metadata does not fit the criteria: same mod and creation, {md.get('ModDate')}, {md.get('CreationDate')}", extra={'db_created': time, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr')})
         if len(caught_warnings) > 0:
             raise Exception("Getting PDF metadata raised a warning")
     first_year = str(config['semester_periods'][0][0])
@@ -140,7 +142,8 @@ def separate_df(df):
     def separate_col(closie, col):
         nonlocal closies
         if closie == 0:
-            df[closies[closie]] = df[col].str.split(' ', 1, expand=True)
+            df[closies[closie][0]] = df[col].apply(lambda value: value[:value.rfind(' ')])
+            df[closies[closie][1]] = df[col].apply(lambda value: value[value.rfind(' ') + 1:])
         else:
             df[closies[closie][0]] = df[col].apply(lambda value: value[:-3 -1])
             df[closies[closie][1]] = df[col].apply(lambda value: value[-3:])
@@ -211,6 +214,21 @@ def insert_df_in_sql(information, time, df, debug=False):
     except Exception as e:
         con.close()
         raise e
+
+def process_db_created(time):
+    file = open(f'{start}pdfs/{time}.pdf', 'rb')
+    process_pdf(file, time)
+
+def process_pdf(file, time):
+    file.seek(0)
+    verify_pdf(file, time)
+    file.seek(0)
+    information = get_pdf_info(time)
+    #if worker.returning_user_name(information['ID']):
+    #    message = "Request success: returning user"
+    file.seek(0)
+    insert_sql_data(information, time, file)
+    return information
 
 def pretend_to_be_post(filename):
     import datetime
