@@ -100,7 +100,7 @@ def get():
     else:
         r = {'name': worker.display_name(information.get('name'), information.get('hr')),
             'class_list': worker.get_connections(information),
-            'ics_link': f'http://franca.link{flask.url_for("calendar.index", _external=False)}api/ics' + worker.old_make_ics_query_string(information)}
+            'ics_link': f'http://franca.link{flask.url_for("calendar.index", _external=False)}api/ics' + worker.make_ics_query_string(information)}
     resp = flask.json.jsonify(r)
     return resp
 
