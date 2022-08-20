@@ -81,8 +81,13 @@ get_ics_ = wrapper()
 @app.route('/api/ics', methods=['GET'])
 @get_ics_
 def get_ics():
+    for version_ in ['1','2']:
+        potential_hr = flask.request.args.get(version_)
+        if potential_hr:
+            version = version_
+            hr = potential_hr
     return flask.Response(worker.get_user_calendar(flask.request.args.get('0'),
-        flask.request.args.get('1')), mimetype = 'text/calendar')
+        version, hr), mimetype = 'text/calendar')
 
 get_ = wrapper()
 @app.route('/api', methods=['GET'])
@@ -95,7 +100,7 @@ def get():
     else:
         r = {'name': worker.display_name(information.get('name'), information.get('hr')),
             'class_list': worker.get_connections(information),
-            'ics_link': f'http://franca.link{flask.url_for("calendar.index", _external=False)}api/ics' + worker.make_ics_query_string(information)}
+            'ics_link': f'http://franca.link{flask.url_for("calendar.index", _external=False)}api/ics' + worker.old_make_ics_query_string(information)}
     resp = flask.json.jsonify(r)
     return resp
 

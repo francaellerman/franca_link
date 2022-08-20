@@ -22,6 +22,7 @@ import warnings
 import io
 import requests
 import pyffx
+from cryptography.fernet import Fernet
 
 start = 'calendar/'
 
@@ -37,6 +38,9 @@ pyffx_length = 10
 
 with open('/etc/franca_link/lhs_calendar_config.yaml', 'rb') as f:
     config_dict = yaml.safe_load(f)
+
+with open('/etc/franca_link/lhs_calendar_fernet.txt', 'rb') as f:
+    fernet = Fernet(f.read())
 
 def format_name(name):
     comma = name.find(',')
@@ -425,20 +429,31 @@ class Find_and_replace:
                 if not period or (time >= period[0] and time < period[1]):
                     func(*func_args, subcomponent)
 
+def make_ics_query_string(information):
+    global fernet
+    def make_query(data):
+        return urllib.parse.quote_plus(fernet.encrypt(data).decode())
+    return f"?0={urllib.parse.quote_plus(information['name'])}&2={make_query(int(information['hr']).to_bytes(2, byteorder='big'))}"
+
 def ffx_key():
     return str.encode(config_dict['ffx_secret_key'])
 
-def make_ics_query_string(information):
+def old_make_ics_query_string(information):
     hr = int(information['hr'])
     enc = pyffx.Integer(ffx_key(), length=pyffx_length).encrypt(hr)
     enco_hr = urllib.parse.quote_plus(str(enc))
     return f"?0={urllib.parse.quote_plus(information['name'])}&1={enco_hr}"
 
-def get_user_calendar(name, enc_hr):
+def get_user_calendar(name, version, enc_hr):
     #Flask should have already decoded the strings before this function
     #I'm a little concerned about using urllib to encode the queries but letting
     #Flask decode the queries since they could do it differently
-    hr = pyffx.Integer(ffx_key(), length=pyffx_length).decrypt(int(enc_hr))
+    if version == '1':
+        hr = pyffx.Integer(ffx_key(), length=pyffx_length).decrypt(int(enc_hr))
+    elif version == '2':
+        def decode_query(string):
+            return fernet.decrypt(str.encode(string))
+        hr = int.from_bytes(decode_query(enc_hr), 'big')
     return LHS_Calendar(name, hr).ical
 
 def get_connections(information):
