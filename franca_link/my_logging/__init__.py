@@ -64,7 +64,8 @@ class email_filter(connections_filter):
     def filter(self, record):
         d = record.__dict__
         #I want emails when there's a new user and when there's an error
-        b = super().filter(record) and (record.levelno >= 30 or (d.get('flask_path').endswith('/api') and d.get('flask_method') == 'POST' and record.msg == 'Request success')) and not d.get('flask_path') == '/'
+        #b = super().filter(record) and (record.levelno >= 30 or (d.get('flask_path').endswith('/api') and d.get('flask_method') == 'POST' and record.msg == 'Request success')) and not d.get('flask_path') == '/'
+        b = super().filter(record) and record.levelno >= 30 and not d.get('flask_path') == '/'
         return b
 
 def set_up_logging():

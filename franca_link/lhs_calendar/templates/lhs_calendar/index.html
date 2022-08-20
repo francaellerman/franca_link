@@ -91,10 +91,9 @@
                        <img src='static/mobile_aspen.jpg'>
                        {% if browser == 'safari'%}
                            <li>Tap the middle share button.</li>
-                           <img src='static/iphone_safari_share_button.jpg'>
                            <li>Tap 'Save to Files'</li>
-                           <img src='static/iphone_safari_save_to_files.jpg'>
                            <li>Tap 'On My iPhone' and 'Save'</li>
+                           <img src='static/iphone_safari.gif'>
                        {% elif mobile == 'iphone' and browser == 'chrome' %}
                            <li>Click on the Download button at the bottom of your screen</li>
                            <img src='static/iphone_chrome_download.jpg'>
@@ -111,7 +110,7 @@
                </ol>
             </div>
             <div class='card card-body page_item'>
-                <p>Next, click below to search and select '{{aspen_file_name}}' from your files.</p>
+                <p>Next, click below to search and select '{{config_['aspen_file_name']}}' from your files.</p>
                 <input class='form-control form-control-{% if mobile %}sm{% else %}lg
                     {% endif %}
                 ' @change='upload' type='file' accept='.pdf'>

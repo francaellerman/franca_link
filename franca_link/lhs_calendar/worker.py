@@ -42,6 +42,11 @@ def format_name(name):
     comma = name.find(',')
     return name[comma + 2:] + ' ' + name[:comma]
 
+def display_name(name, hr):
+    nickname = db("select nickname from students where name = ? and hr = ?", [name, hr])[0][0]
+    if nickname: name = nickname
+    return format_name(name)
+
 def look(li, item):
     try: return li.index(item)
     except ValueError: return None
@@ -240,7 +245,7 @@ class LHS_Calendar:
         ex = db("select course_no, description, level, term, room, teacher, schedule from enrollments join courses on enrollments.course_no = courses.id join sections using(course_no, section, term) where student_name = ? and student_hr = ?", [name, hr])
         assert len(ex) > 0
         [self.make_block(row) for row in ex]
-        self.cal['X-WR-CALNAME'] = f"Quickly: {format_name(name)}'s calendar"
+        self.cal['X-WR-CALNAME'] = f"Quickly: {display_name(name, hr)}'s calendar"
         self.cal['X-WR-CALDESC'] = "Your Quickly calendar. Should sync up to every 12 hours."
         self.dates_to_lunches = {'S 1':{}, 'S 2':{}}
         [[[self.edit_event(func, semester, subcomponent) for subcomponent in
@@ -420,11 +425,11 @@ def get_user_calendar(name, enc_hr):
 
 def get_connections(information):
     classes = db('select course_no, section, term from enrollments where student_name = ? and student_hr = ?', [information['name'], information['hr']], no_Row=True)
-    course_select = "select student_name from enrollments where not (student_name == ? and student_hr = ?) and course_no = ? and section = ? and term = ?" 
+    course_select = "select student_name, student_hr from enrollments where not (student_name == ? and student_hr = ?) and course_no = ? and section = ? and term = ?" 
     classmates = {class_: db(course_select, (information['name'],information['hr']) + class_, no_Row=True)
             for class_ in classes}
     def names(l):
-        return [format_name(tuple_of_name[0]) for tuple_of_name in l]
+        return [display_name(*tuple_of_name) for tuple_of_name in l]
     classmates = {k: names(v) for k, v in classmates.items()}
     def get_coursename(no):
         return db("select description from courses where id = ?", [no], no_Row=True)[0][0]
@@ -466,7 +471,7 @@ def make_sql_databases():
     cursor = con.cursor()
     #It's unclear if the sections are unique to each term or not
     #This isn't autoincrement for a reason I can't remember
-    cursor.execute("create table students(name text, hr int, created text, privacy text, primary key (name, hr))")
+    cursor.execute("create table students(name text, hr int, created text, nickname text, privacy text, primary key (name, hr))")
     cursor.execute("create table courses(id text primary key, created text, Description text, Level text)")
     cursor.execute("create table sections(course_no text, Term text, section int, created text, Room text, Teacher text, Schedule text, primary key (course_no, Term, section), foreign key(course_no) references courses(id))")
     cursor.execute("create table enrollments(id integer primary key, created text, student_name text, student_hr int, course_no text, section int, Term text, foreign key (course_no, section, Term) references sections (course_no, section, Term))")
