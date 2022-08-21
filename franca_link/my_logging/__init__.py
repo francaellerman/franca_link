@@ -108,6 +108,8 @@ class wrapper_related:
                 'flask_path': flask.request.path,
                 'flask_query': flask.request.args,
                 'flask_session': flask.session,
+                'flask_platform': flask.request.user_agent.platform,
+                'flask_browser': flask.request.user_agent.browser,
                 'flask_method': flask.request.method},
                 **extra}
 

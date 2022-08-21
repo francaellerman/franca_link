@@ -261,7 +261,8 @@ class LHS_Calendar:
                 break
             except FileNotFoundError:
                 continue
-        self.time_ = datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+        self.datetime = datetime.datetime.utcnow()
+        self.time_ = self.datetime.strftime('%Y%m%dT%H%M%SZ')
         event = ical.Event()
         event['summary'] = self.time_
         event['last-modified'] = self.time_
@@ -275,7 +276,7 @@ class LHS_Calendar:
         assert len(ex) > 0
         [self.make_block(row) for row in ex]
         self.cal['X-WR-CALNAME'] = f"Quickly: {display_name(name, hr)}'s calendar"
-        self.cal['X-WR-CALDESC'] = "Your Quickly calendar. Should sync up to every 12 hours."
+        self.cal['X-WR-CALDESC'] = "Go to http://franca.link/quickly to see information on your calendar."
         self.dates_to_lunches = {'S 1':{}, 'S 2':{}}
         [[[self.edit_event(func, semester, subcomponent) for subcomponent in
                 self.cal.subcomponents]
@@ -351,7 +352,9 @@ class LHS_Calendar:
         value = self.blocks[semester].get(event['SUMMARY'])
         if value is not None:
             event['SUMMARY'] = f'{value["Description"]} ({event["SUMMARY"]})'
-            event['DESCRIPTION'] = f'{value["Level"]}\n{value["Teacher"]}'
+            local_time = self.datetime.replace(tzinfo=pytz.utc).astimezone(LHS_Calendar.tz)
+            user_time = local_time.strftime('%a, %b %d, %Y at %I:%M %p')
+            event['DESCRIPTION'] = f'{value["Level"]}\n{format_name(value["Teacher"])}\nGoogle Calendar last updated your calendar {user_time}'
             event['LOCATION'] = value['Room']
         #I'm not doing the following code because people might want to still
         #know the times of the three lunches to see their friends or smth
