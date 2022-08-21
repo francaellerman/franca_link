@@ -26,12 +26,24 @@ def index():
         flask.session.clear()
         flask.session['post_op_teacher_term_reload'] = True
     global config_
-    browser = flask.request.user_agent.browser
-    platform = flask.request.user_agent.platform
+    user_agent = flask.request.headers.get('User-Agent').lower()
+    if 'iphone' in user_agent:
+        mobile = 'iphone'
+        platform = 'iphone'
+    elif 'android' in user_agent:
+        platform = 'android'
+        mobile = 'android'
+    else:
+        mobile = False
+        platform = 'computer idc'
+    if 'safari' in user_agent: browser = 'safari'
+    else: browser = 'chrome'
+    #browser = flask.request.user_agent.browser
+    #platform = flask.request.user_agent.platform
     #user_agent = flask.request.headers.get('User-Agent').lower()
-    if platform == 'iphone' or platform == 'ipad': mobile = 'iphone'
-    elif platform == 'android': mobile = 'android'
-    else: mobile = False
+    #if platform == 'iphone' or platform == 'ipad': mobile = 'iphone'
+    #elif platform == 'android': mobile = 'android'
+    #else: mobile = False
     return flask.render_template('lhs_calendar/index.html', platform=platform, browser=browser, mobile=mobile, open_=worker.config_dict['open'], config_=worker.config_dict)
 
 open_ = wrapper()
