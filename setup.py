@@ -7,7 +7,7 @@ setup(name='franca_link',
       zip_safe=False,
       #py_modules=['franca_link'],
       install_requires = [
-          'flask',
+          'flask==1.1.2',
           'pdfminer',
           'pdfminer.six',
           'PyPDF2',
