@@ -70,8 +70,6 @@ def verify_pdf(file, time):
     #Try to catch people trying to tamper with the files
     with warnings.catch_warnings(record=True) as caught_warnings:
         md = get_metadata(file)
-        with pkg_resources.resource_stream('franca_link.lhs_connections', 'pdf_metadata.pickle') as f:
-            franca_md = pickle.load(f)
         if not md.get('ModDate') == md.get('CreationDate'):
             my_logger.warning(f"Metadata does not fit the criteria: same mod and creation, {md.get('ModDate')}, {md.get('CreationDate')}", extra={'db_created': time})
         if not md.get('Creator') == b'JasperReports (StudentScheduleHighSchool)':
@@ -160,8 +158,8 @@ def separate_df(df):
 
 def insert_df_in_sql(information, time, df, debug=False):
     separate_df(df)
-    df = df[['Course','Level','Description', 'Room','Teacher','Term','Schedule']].dropna()
-    df = df[df['Schedule'] != 'Adv']
+    df = df[['Course','Level','Description', 'Room','Teacher','Term','Schedule']]
+    df = df[~df['Schedule'].isin(['Adv','I'])].dropna(axis=0, subset=['Course'])
     delete_previous_rows(information)
     db("insert into students(name, hr, created, privacy) values(?,?,?, ?) on conflict(name, hr) do update set created = excluded.created", [information['name'], information['hr'], time, 'Default'])
     #empty cells are outputted as nans. dropnan deletes rows with nans like
@@ -244,16 +242,18 @@ class LHS_Calendar:
     config = config_dict
     tz = pytz.timezone('America/New_York')
     semester_periods = {}
-    def get_date(config, key, d='semester_periods'):
-        return datetime.datetime(*config[d][key],
-                tzinfo = pytz.timezone('America/New_York'))
-    semester_periods['S 1'] = [get_date(config, 0), get_date(config, 1)]
-    semester_periods['S 2'] = [get_date(config, 1), get_date(config, 2)]
+    #make_date = lambda tup : datetime.datetime(*tup, tzinfo = pytz.timezone('America/New_York'))
+    #def get_date(key, d='semester_periods'):
+    #    return make_date(config_dict[d][key])
+    #semester_periods['S 1'] = [get_date(0), get_date(1)]
+    #semester_periods['S 2'] = [get_date(1), get_date(2)]
+    #all_cs_dates = {k: [make_date(tup) for tup in v] for k, v in config['cs_dates'].items()}
     quarter_turnovers = {}
     for semester in semester_periods:
         quarter_turnovers[semester] = get_date(config, semester, d='quarter_turnovers')
 
     def __init__(self, name, hr):
+        self.hr = hr
         while True:
             try:
                 with open(start + 'calendar.ics', 'rb') as f:
@@ -290,10 +290,17 @@ class LHS_Calendar:
         #with open(start + 'test.ics', 'w') as f:
         #    f.write(self.ical)
     
+    def get_datetime(event):
+        time = ical.prop.vDDDTypes.from_ical(subcomponent['DTSTART'])
+        if type(time) is datetime.date:
+            time = Find_and_replace.date_to_datetime(LHS_Calendar.tz, time)
+        return time
+
     def make_block(self, row):
-        #Counselor seminar course numbers seem to start with CS.
-        #CS's don't actually go on for the whole semester, so they are excluded in this version.
-        #S stands for semester
+        if LHS_Calendar.config['cs_dates'] and row['course_no'].startswith('CS'):
+            self.cs_block = row['Schedule']
+            grade = int(row['course_no'][2:])
+            self.cs_dates = LHS_Calendar.all_cs_dates[grade]
         terms = []
         #It seems to remember the capitalization of each column??
         #ex. course_no and Term
@@ -335,9 +342,7 @@ class LHS_Calendar:
     def edit_event(self, func, semester, subcomponent):
         if (type(subcomponent) is ical.cal.Event
             and not subcomponent.is_empty()):
-            time = ical.prop.vDDDTypes.from_ical(subcomponent['DTSTART'])
-            if type(time) is datetime.date:
-                time = Find_and_replace.date_to_datetime(LHS_Calendar.tz, time)
+            time = LHS_Calendar.get_datetime(subcomponent)
             #If period is None, the period is assumed to be always
             if semester is None or (time >= LHS_Calendar.semester_periods[semester][0]
                 and time < LHS_Calendar.semester_periods[semester][1]):
@@ -350,7 +355,14 @@ class LHS_Calendar:
         #key's corresponding value (the first parameter), otherwise
         #it is changed to SUMMARY itself (second paramter).
         value = self.blocks[semester].get(event['SUMMARY'])
-        if value is not None:
+        time_ = LHS_Calendar.get_datetime(event)
+        if event['SUMMARY'] == 'Advisory':
+            event['location'] = str(self.hr)
+        elif (event['SUMMARY'] == self.cs_block
+            and time_ >= self.cs_dates[0] and time_ <= self.cs_dates[1]):
+            event['summary'] = 'Counselor Seminar ({self.cs_block})'
+            event['location'] = self.cs_room
+        elif value is not None:
             event['SUMMARY'] = f'{value["Description"]} ({event["SUMMARY"]})'
             local_time = self.datetime.replace(tzinfo=pytz.utc).astimezone(LHS_Calendar.tz)
             user_time = local_time.strftime('%a, %b %d, %Y at %I:%M %p')
@@ -368,9 +380,7 @@ class LHS_Calendar:
             #The lunches are stored starting at 0 while Days start at 1
             #This will return a 0, 1, or 2
             lunch_no = self.lunches[semester][int(day_res.group(1)) - 1]
-            time_ = ical.prop.vDDDTypes.from_ical(event['DTSTART'])
-            if type(time_) is datetime.date:
-                time_ = Find_and_replace.date_to_datetime(LHS_Calendar.tz, time_)
+            time_ = LHS_Calendar.get_datetime(event)
             if time_ >= LHS_Calendar.quarter_turnovers[semester]:
                 if lunch_no == 1: lunch_no = 2
                 elif lunch_no == 2: lunch_no = 1
