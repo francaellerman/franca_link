@@ -16,8 +16,10 @@ var app = createApp({
     },
     watch: {
         errors: function (value) {
-            let modal = new bootstrap.Modal(document.getElementById('error_modal'), {})
-            modal.show()
+            if (this.errors) {
+                let modal = new bootstrap.Modal(document.getElementById('error_modal'), {})
+                modal.show()
+            }
         }
     },
     async created() {
