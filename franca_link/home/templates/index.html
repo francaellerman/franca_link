@@ -13,16 +13,29 @@
     <p>by Franca Ellerman</p>
 {% endblock %}
 {% block content %}
-    <div class='card card-body page_item title_card'>
-        <h2><img src='{{url_for('calendar.static', filename='Icon.png')}}'> <a href='{{url_for('calendar.index', _external=False)}}'>Quickly for LHS</a></h2>
-        <p>My Blocks/Daily replacement</p>
-    </div>
-    {#<div class='card card-body page_item title_card'>
-        <h2><img src='{{url_for('connections.static', filename='Icon.png')}}'> <a href='{{url_for('connections.index', _external=False)}}'>LHS 2023 Connections</a></h2>
-        <p>See who's in your classes next year. Currently has over 8% of the senior class.</p>
-    </div>#}
-    <div class='card card-body page_item title_card'>
-        <h2><img src='{{url_for('calculator.static', filename='Icon.png')}}'> <a href='/calculator'>LHS Admissions Calculator</a></h2>
-        <p>See what percent of LHS students with your GPA and SAT historically got into various colleges</p>
-    </div>
+    {% if connections %}
+        <div class="card text-center page_item text_card">
+          <div class="card-header">
+            Announcement
+          </div>
+          <div class="card-body">
+            <h5 class="card-title">LHS 2023 Connections is out-of-date</h5>
+            <p class="card-text">Lexington High School has released everyone's schedules. To see your updated connections, use my new schedule app that has over 29% of LHS students called Quickly.</p>
+            <a href="/quickly" class="btn btn-success">Go to Quickly</a>
+          </div>
+        </div>
+    {% else %}
+        <div class='card card-body page_item title_card'>
+            <h2><img src='{{url_for('calendar.static', filename='Icon.png')}}'> <a href='{{url_for('calendar.index', _external=False)}}'>Quickly for LHS</a></h2>
+            <p>My Blocks/Daily replacement</p>
+        </div>
+        {#<div class='card card-body page_item title_card'>
+            <h2><img src='{{url_for('connections.static', filename='Icon.png')}}'> <a href='{{url_for('connections.index', _external=False)}}'>LHS 2023 Connections</a></h2>
+            <p>See who's in your classes next year. Currently has over 8% of the senior class.</p>
+        </div>#}
+        <div class='card card-body page_item title_card'>
+            <h2><img src='{{url_for('calculator.static', filename='Icon.png')}}'> <a href='/calculator'>LHS Admissions Calculator</a></h2>
+            <p>See what percent of LHS students with your GPA and SAT historically got into various colleges</p>
+        </div>
+    {% endif %}
 {% endblock %}

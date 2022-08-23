@@ -22,9 +22,12 @@ index_ = wrapper()
 @app.route('/', methods=['GET'])
 @index_
 def index():
-    if not flask.session.get('post_op_teacher_term_reload'):
-        flask.session.clear()
-        flask.session['post_op_teacher_term_reload'] = True
+    def check_for(name):
+        if not flask.session.get(name):
+            flask.session.clear()
+            flask.session[name] = True
+    check_for('post_op_teacher_term_reload')
+    if datetime.date.today() >= datetime.date(2022, 8, 29): check_for('before_first_day')
     global config_
     user_agent = flask.request.headers.get('User-Agent').lower()
     if 'iphone' in user_agent:
@@ -35,15 +38,10 @@ def index():
         mobile = 'android'
     else:
         mobile = False
-        platform = 'computer idc'
-    if 'safari' in user_agent: browser = 'safari'
-    else: browser = 'chrome'
-    #browser = flask.request.user_agent.browser
-    #platform = flask.request.user_agent.platform
-    #user_agent = flask.request.headers.get('User-Agent').lower()
-    #if platform == 'iphone' or platform == 'ipad': mobile = 'iphone'
-    #elif platform == 'android': mobile = 'android'
-    #else: mobile = False
+        platform = None
+    if 'CriOS' in user_agent: browser = 'chrome'
+    elif 'safari' in user_agent: browser = 'safari'
+    else: browser = None
     return flask.render_template('lhs_calendar/index.html', platform=platform, browser=browser, mobile=mobile, open_=worker.config_dict['open'], config_=worker.config_dict)
 
 open_ = wrapper()
@@ -77,13 +75,13 @@ def post():
         information = worker.process_pdf(file, time)
         message = "Request success"
     except worker.pdf_verification_exception:
-        wrapper_related.exception(extra={'db_created': time, 'pdf_verification_exception': True, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr')})
+        wrapper_related.exception(extra={'db_created': time, 'pdf_verification_exception': True, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr'), 'flask_filename': file.filename})
         resp = flask.json.jsonify("pdf_verification_exception")
     except:
-        wrapper_related.exception(extra={'db_created': time, 'pdf_verification_exception': False, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr')})
+        wrapper_related.exception(extra={'db_created': time, 'pdf_verification_exception': False, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr'), 'flask_filename': file.filename})
         flask.abort(500)
     else:
-        wrapper_related.info(message, extra={'db_created': time, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr')})
+        wrapper_related.info(message, extra={'db_created': time, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr'), 'flask_filename': file.filename})
         flask.session.permanent = True
         flask.session['lhs_calendar_name'] = information['name']
         flask.session['lhs_calendar_hr'] = information['hr']

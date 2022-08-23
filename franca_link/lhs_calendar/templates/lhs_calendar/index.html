@@ -85,36 +85,36 @@
         <div id='instructions' v-show='!cookie && (!started_uploading || errors)'>
             <div class='text_card card card-body page_item'>
                <ol>
-                   <li>Go to <a href='https://ma-lexington.myfollett.com/aspen/logon.do' target='_blank'>Aspen</a>.</li>
-                   {% if mobile %}
-                       <li>Scroll down, tap 'Published Reports', and tap '{{config_['aspen_file_name']}}'.</li>
-                       <img src='static/mobile_aspen.jpg'>
+                   <li>Go to <a href='https://ma-lexington.myfollett.com/aspen/logon.do' target='_blank'>Aspen</a> and follow the steps of the GIF.</li>
+                   <img src='static/aspen_updated_pdf.gif'>
+               </ol>
+            </div>
+            <div class='text_card card card-body page_item'>
+                <ol start='2'>
+                   {% if platform == 'iphone' %}
                        {% if browser == 'safari'%}
                            <li>Tap the middle share button.</li>
                            <li>Tap 'Save to Files'</li>
+                           <li>Remember the number in 'report###.pdf' listed at the top.</li>
                            <li>Tap 'On My iPhone' and 'Save'</li>
                            <img src='static/iphone_safari.gif'>
-                       {% elif mobile == 'iphone' and browser == 'chrome' %}
-                           <li>Click on the Download button at the bottom of your screen.</li>
+                       {% elif browser == 'chrome' %}
+                           <li>Click on the Download button at the bottom of your screen and remember the number in 'report###.pdf'.</li>
                            <img src='static/iphone_chrome_download.jpg'>
                        {% else %}
-                           <li>Make sure the file is downloaded in some way, whether it be automatically downloaded or you have to click on some things.</li>
+                           <li>Make sure the file is downloaded and that you know the number in the file name 'report###.pdf'.</li>
                        {% endif %}
                    {% else %}
-                       <li>Click on '{{config_['aspen_file_name']}}' under 'Published Reports' to download it.</li>
-                       <img src='static/computer_aspen.png'>
-                       {% if browser == 'safari' %}
-                           <li>If prompted to accept downloads from Aspen, accept.</li>
-                       {% endif %}
+                       <li>Make sure the file is downloaded and that you know the number in the file name 'report###.pdf'.</li>
                    {% endif %}
                </ol>
             </div>
             <div class='card card-body page_item'>
-                <p>Next, click below to search and select the most recent file with the name '{{config_['aspen_file_name']}}'.</p>
+                <p>Next, click below to search and select your file 'report(your number).pdf'.</p>
                 <input class='form-control form-control-{% if mobile %}sm{% else %}lg
                     {% endif %}
                 ' @change='upload' type='file' accept='.pdf'>
-                <p id='fine_print'>By uploading your schedule, you consent to sharing your schedule information with Quickly.</p>
+                <p id='fine_print'>By uploading your schedule, you consent to sharing your schedule PDF with Quickly.</p>
             </div>
         </div>
     {% else %}

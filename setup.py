@@ -15,8 +15,8 @@ setup(name='franca_link',
           'pandas',
           'icalendar',
           'pyyaml',
-          'python-magic',
-          'pyffx',
+          'python-magic==0.4.27',
+          'pyffx==0.3.0',
           'naviance_admissions_calculator_web @ git+https://github.com/francaellerman/naviance_admissions_calculator_web'
       ]
       )
