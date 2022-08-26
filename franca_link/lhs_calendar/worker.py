@@ -80,6 +80,10 @@ def verify_pdf(file, time):
             raise pdf_verification_exception("Metadata does not fit the criteria: same producer", md.get('Producer'))
         if not md.get('ModDate') == md.get('CreationDate'):
             my_logger.warning(f"Metadata does not fit the criteria: same mod and creation, {md.get('ModDate')}, {md.get('CreationDate')}", extra={'db_created': time, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr')})
+        today = datetime.datetime.now().astimezone(pytz.timezone('America/New_York')).strftime('%Y%m%d')
+        day = md.get('CreationDate').decode('utf-8')[2:10]
+        if not today == day:
+            raise pdf_verification_exception(f"Uploaded PDF is from {md.get('CreationDate')}, not today")
         if len(caught_warnings) > 0:
             raise Exception("Getting PDF metadata raised a warning")
     first_year = str(config['semester_periods'][0][0])
@@ -134,10 +138,10 @@ def delete_previous_rows(information):
     #    return True
     #return False
 
-def insert_sql_data(information, time, file):
+def insert_sql_data(information, time, file, local=False):
     assert not information['name'].find(',') == -1
     df = tabula.read_pdf(file, pages=1, silent=True)[0]
-    insert_df_in_sql(information, time, df)
+    insert_df_in_sql(information, time, df, local=local)
 
 def separate_df(df):
     closies = [['Teacher', 'Term']]
@@ -154,18 +158,23 @@ def separate_df(df):
                 separate_col(closie, col)
     [check_separate_col(col) for col in df.columns]
 
-def insert_df_in_sql(information, time, df, debug=False):
+def insert_df_in_sql(information, time, df, local=False):
     separate_df(df)
     df = df[['Course','Level','Description', 'Room','Teacher','Term','Schedule']]
+    df = df.replace('', np.nan)
     df = df.dropna(axis=0, subset=['Description', 'Course', 'Term', 'Schedule'])
     df = df.replace({np.nan: None})
-    df = df.replace('', None)
     def correct_format(row):
         boolean = (bool(re.match('^(?:[A-H][1-4]*)+$', row['Schedule'])) and
                 not row['Course'].find('-') == -1)
         return boolean
     include = df.apply(correct_format, axis=1)
     df = df.loc[include]
+    def trim_teacher(value):
+        found = value.find(';')
+        if found == -1: return value
+        else: return value[:found]
+    df['Teacher'] = df['Teacher'].apply(trim_teacher)
     delete_previous_rows(information)
     db("insert into students(name, hr, created, privacy, lock) values(?,?,?,?,?) on conflict(name, hr) do update set created = excluded.created, lock = excluded.lock", [information['name'], information['hr'], time, 'Default', 1])
     #empty cells are outputted as nans. dropnan deletes rows with nans like
@@ -180,45 +189,39 @@ def insert_df_in_sql(information, time, df, debug=False):
         section = int(row['Course'][middle + 1:])
         return pd.Series([course_no, section], index=['course_no', 'section'])
     df = pd.concat([df, df.apply(split_course, axis=1)], axis=1, join='inner')
+    #Shouldn't be a necessary line but just in case I'm wrong
     df = df[df['course_no'] != 'Iblock']
-    def collect_class_info(name, cols, created):
-        course_df = df[cols]
+    def collect_class_info(name, primary_keys, cols, created):
+        course_df = df[primary_keys + cols]
         if name == 'courses':
-            cols[0] = 'id'
-        inserts = f"{name}({','.join(cols)},created) values({','.join(['?']*(len(cols)+1))})"
+            primary_keys[0] = 'id'
+        insert_string = f"insert into {name}({','.join(primary_keys + cols)},created) values({','.join(['?']*(len(primary_keys + cols)+1))})"
         def make_equal(name):
+            #is allows nulls to also be compared while = does not
             return f"{name} is ?"
-        def make_excluded(name):
-            return f"{name} = excluded.{name}"
-        cols_same = ' and '.join([make_equal(x) for x in cols])
-        teacher_index = look(cols, 'Teacher')
-        def upsert_course_name(row):
-            nonlocal name
-            nonlocal cols_same
-            nonlocal teacher_index
+        primary_keys_same = ' and '.join([make_equal(x) for x in primary_keys])
+        exists_string = f"select {','.join(cols)} from {name} where {primary_keys_same}"
+        def upsert_course_name(primary_key_values, row):
             global my_logger
-            if teacher_index and type(row[teacher_index]) == str and not row[teacher_index].find(';') == -1:
-                row[teacher_index] = row[teacher_index][:row[teacher_index].find(';')]
-            #If row is an exact match, except for creation date, for something already there
-            string = f"select created from {name} where {cols_same}"
-            if len(db(string,row)) == 0:
-                #If the row is going to replace another row, this is will throw an
-                #error
-                try: db(f"insert into {inserts}", list(row) + [created])
-                except sqlite3.IntegrityError:
-                    if config_dict['allow_updates']:
-                        command = f"insert into {inserts} on conflict("
-                        if name == 'courses': command += 'id'
-                        elif name == 'sections': command += 'course_no, term, section'
-                        command += f') do update set {",".join([make_excluded(col_name) for col_name in cols])}'
-                        message_start = 'SQL row was updated'
-                        db(command, list(row) + [created])
-                    else: message_start = 'SQL row was attempted to update' 
-                    my_logger.warning(f'{message_start} with {list(row) + [created]}', extra={'calendar_name': information['name'], 'calendar_hr': information['hr'], 'db_created': time})
+            updated = False
+            current_sql_row_list = db(exists_string,primary_key_values)
+            if len(current_sql_row_list) == 0:
+                #Means that nothing has its unique IDs so I can insert
+                db(insert_string, primary_key_values + row + [created])
+            elif config_dict['allow_updates']:
+                for index in range(len(cols)):
+                    if not row[index] == None and not row[index] == current_sql_row_list[0][cols[index]]:
+                        updated = True
+                        db(f"update {name} set {cols[index]} = ?  where {primary_keys_same}", [row[index]] + primary_key_values)
+                        warning = f'SQL row {primary_key_values} was updated with {row[index]}'
+                        if local: print(warning)
+                        if not local: my_logger.warning(warning, extra={'calendar_name': information['name'], 'calendar_hr': information['hr'], 'db_created': time})
+                if updated: db(f"update {name} set created = ? where {primary_keys_same}", [created] + primary_key_values)
         #Rows will be in order of cols
-        [upsert_course_name(row) for row in course_df.to_numpy()]
-    collect_class_info('courses', ['course_no', 'Description', 'Level'], time)
-    collect_class_info('sections', ['course_no', 'Term', 'section', 'Room', 'Teacher', 'Schedule'], time)
+        [upsert_course_name(list(row[:len(primary_keys)]), list(row[len(primary_keys):])) for row in course_df.to_numpy()]
+    #First items in cols must be the primary key
+    collect_class_info('courses', ['course_no'], ['Description', 'Level'], time)
+    collect_class_info('sections', ['course_no', 'Term', 'section'], ['Room', 'Teacher', 'Schedule'], time)
     con = sqlite3.connect(start + 'calendar.sql')
     try:
         df[['created', 'student_name', 'student_hr', 'course_no', 'section', 'Term']].to_sql(
@@ -232,9 +235,9 @@ def insert_df_in_sql(information, time, df, debug=False):
 
 def process_db_created(time):
     file = open(f'{start}pdfs/{time}.pdf', 'rb')
-    return process_pdf(file, time)
+    return process_pdf(file, time, local=True)
 
-def process_pdf(file, time):
+def process_pdf(file, time, local=False):
     global config_dict
     file.seek(0)
     verify_pdf(file, time)
@@ -245,13 +248,8 @@ def process_pdf(file, time):
     #if worker.returning_user_name(information['ID']):
     #    message = "Request success: returning user"
     file.seek(0)
-    insert_sql_data(information, time, file)
+    insert_sql_data(information, time, file, local=local)
     return information
-
-def pretend_to_be_post(filename):
-    import datetime
-    information = get_pdf_info(filename)
-    insert_sql_data(information, datetime.datetime.utcnow().isoformat(), filename)
 
 def make_class_variables(cls):
     #Because no one wants to deal with Python's class scoping
