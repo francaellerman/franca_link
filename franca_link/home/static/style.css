@@ -54,6 +54,10 @@ a:hover{
     color: var(--green);
 }
 
+.modal-dialog {
+    max-width: min(calc(100vw - 1rem), 40rem);
+}
+
 .instruction_list > * {
     margin-bottom: 1rem;
 }
@@ -255,12 +259,16 @@ h1 img, h2 img {
     background-color: white;
 }
 
-.copy_space .list-group-item {
+.copy_space .list-group-item:first-child {
     /*border-right-color: var(--green);*/
     text-overflow: clip;
     white-space: nowrap;
     overflow: hidden;
-    max-width: 30rem; 
+}
+
+.instruction_list .copy_space .list-group-item:first-child {
+    width: 0;
+    flex-grow: 1;
 }
 
 .copy_space .list-group-item-action {

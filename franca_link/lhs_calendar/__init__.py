@@ -29,20 +29,23 @@ def index():
     check_for('post_op_teacher_term_reload')
     if datetime.date.today() >= datetime.date(2022, 8, 29): check_for('before_first_day')
     global config_
-    user_agent = flask.request.headers.get('User-Agent').lower()
-    if 'iphone' in user_agent:
-        mobile = 'iphone'
-        platform = 'iphone'
-    elif 'android' in user_agent:
-        platform = 'android'
-        mobile = 'android'
-    else:
-        mobile = False
-        platform = None
-    if 'CriOS' in user_agent: browser = 'chrome'
-    elif 'safari' in user_agent: browser = 'safari'
-    else: browser = None
-    return flask.render_template('lhs_calendar/index.html', platform=platform, browser=browser, mobile=mobile, open_=worker.config_dict['open'], config_=worker.config_dict)
+    pre_user_agent = flask.request.headers.get('User-Agent')
+    if pre_user_agent:
+        user_agent = pre_user_agent.lower()
+        if 'iphone' in user_agent:
+            mobile = 'iphone'
+            platform = 'iphone'
+        elif 'android' in user_agent:
+            platform = 'android'
+            mobile = 'android'
+        else:
+            mobile = False
+            platform = None
+        if 'CriOS' in user_agent: browser = 'chrome'
+        elif 'safari' in user_agent: browser = 'safari'
+        else: browser = None
+        return flask.render_template('lhs_calendar/index.html', platform=platform, browser=browser, mobile=mobile, open_=worker.config_dict['open'], config_=worker.config_dict)
+    
 
 open_ = wrapper()
 @app.route('/open_sesame', methods=['GET'])

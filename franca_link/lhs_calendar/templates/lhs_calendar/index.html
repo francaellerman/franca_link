@@ -62,7 +62,18 @@
           </div>
           <div class="modal-body">
               <template v-if='pdf_verification_exception'>
-                  The file you uploaded is not a PDF in the right format. Re-read the instructions and see if you can find a different PDF file that follows the criteria. <a href='mailto:23ellerman2@lexingtonma.org'>You can email me</a> if you want more support.
+                  <p>The file you uploaded is not a PDF in the right format. You need to follow all of the instructions, even if you've done them before, because confusing things can happen if you don't.</p>
+                  <p>The follow will/may not work:</p>
+                  <ul>
+                      <li>A PDF schedule that isn't directly from downloading on Aspen (ex. it was sitting on your desktop or phone, it's the one you sent to a friend, etc.)</li>
+                      <li>If you're a senior, the schedule sheet given to seniors in June</li>
+                      <li>An image/screenshot or an image/screenshot converted into a PDF</li>
+                      <li>A schedule from a previous year</li>
+                      <li>The other PDFs listed on Aspen, like your report card or the password file.</li>
+                      <li>A middle school schedule</li>
+                      <li>Some random PDF</li>
+                  </ul>
+                  <p><a href='mailto:23ellerman2@lexingtonma.org'>You can email me</a> if you want more support.</p>
               </template>
               <template v-else>
                   [[errors]] I was emailed about it and depending on the information available, I may email your school email address about it. I would appreciate it if <a href='mailto:23ellerman2@lexingtonma.org'>you emailed me</a> either way.
@@ -96,6 +107,7 @@
                            <li>Tap the middle share button.</li>
                            <li>Tap 'Save to Files'</li>
                            <li>Remember the number in 'report###.pdf' listed at the top.</li>
+                           <li>If there is an "Options" box under 'report###.pdf', tap it and make sure you're using "PDF" and not "Automatic".</li>
                            <li>Tap 'On My iPhone' and 'Save'</li>
                            <img src='static/iphone_safari.gif'>
                        {% elif browser == 'chrome' %}
@@ -118,7 +130,7 @@
             </div>
         </div>
     {% else %}
-        <h3 id='come_back' class='page_item pad'>Come back shortly after schedules drop today!</h3>
+        <h3 id='come_back' class='page_item pad'>Quickly is closed for maintenance. Come back later today.</h3>
     {% endif %}
     <template v-if='ics_link'>
         {#<h4 class='page_item'>See your calendar</h4>#}
@@ -141,39 +153,63 @@
                     <li>Log into the Google account you want to see your schedule in (school, personal, or both).</li>
                     <li>See where to paste the code by following this GIF. At the end you should get a message saying "Calendar created. Fetching events in the background." at the bottom of your screen after a few seconds. If you don't, try again in a few minutes.</li>
                     <img src='static/google_calendar.gif'>
-                    {% if mobile == 'iphone' %}
-                    <li>I recommend <a href='https://itunes.apple.com/app/apple-store/id909319292?pt=9008&ct=web_about&mt=8' target='_blank'>downloading the Google Calendar app</a>.</li>
-                    {% else %}
-                    <li>I recommend downloading the Google Calendar app on your phone.</li>
-                    {% endif %}
-                    
                     <li>You'll see a calendar called "Quickly: [[name]]'s calendar" on the Google Calendar website and app. Change its color to your favorite color! Your blocks will load at random and take about a minute.</li>
+                    <li>To see your calendar on your phone: If you don't have the Google Calendar app,
+                    {% if mobile == 'iphone' %}
+                    <a href='https://itunes.apple.com/app/apple-store/id909319292?pt=9008&ct=web_about&mt=8' target='_blank'>download it</a>.
+                    {% else %}
+                    download it.
+                    {% endif %}
+                    If you do have the app but your calendar isn't showing up, see the FAQ.</li>
                 </ol>
+                <p>Note that Google Calendar syncs with Quickly every 24 to 48 hours. See the FAQ for how to force a reload.</p>
             </div>
             <div class='accordion' id='accordion'>
                 <div class='accordion-item'>
-                    <p class="accordion-header" id="heading_two">
+                    <p class="accordion-header" id="heading_three">
                         <button class="accordion-button collapsed" type='button'
                             data-bs-toggle="collapse"
                             data-bs-target="#collapse_three"
                             aria-expanded='false'
                             aria-controls='collapse_three'>
-                            If you don't use Google Calendar
+                            FAQ
                         </button>
                     </p>
                     <div id="collapse_three"
                         class="accordion-collapse collapse"
                         aria-labelledby="heading_three"
                         data-bs-parent="#accordion">
-                        <div class='accordion-body card-body'>
-                            <ol start='4'>
-                                <li>Look up how to add or subscribe to a calendar by link and use the link you just copied.</li>
-                            </ol>
+                        <div class='accordion-body text_card card-body'>
+                            <ul>
+                                <li>How do I force my calendar to reload on Google Calendar right now?
+                                    <p>Every time you visit the Quickly site, franca.link/quickly, the link box at the top of the page gives you a new link for your calendar. Delete your current Quickly calendar in Google Calendar and follow the same instructions you did before to add your new link to Google Calendar. Your new calendar is now up-to-date with Quickly (note that it will still sync every 24 to 48 hours from here on out).</p>
+                                </li>
+                                <li>What if my school schedule changed?
+                                    <p>Following the Quickly instructions for uploading your PDF on any device will cause Quickly to update your personal Quickly schedule. If you want to upload your new schedule on this device, click the Restart button below. The changes to your schedule will take up to 24 to 48 hours to show up on Google Calendar, but if you want to see them immediately, follow the FAQ "How do I force my calendar to reload on Google Calendar right now?".</p>
+                                </li>
+                                <li>I see my schedule on my computer but not my phone.
+                                    <p>You need to be on the same Google account on your phone as the one you used to add your Quickly calendar. To add your Quickly calendar to more Google accounts, just follow the instructions for each Google account.</p>
+                                    <p>If you are in the right account, <a href='https://support.google.com/calendar/answer/6261951?hl=en&co=GENIE.Platform%3DiOS#'>check out this Google Calendar troubleshooting page</a>.</p>
+                                </li>
+                                <li>What if I don't want to use Google Calendar?
+                                    <p>Look up how to add or subscribe to a calendar by link and use the link from the link box.<p>
+                                </li>
+                                <li>The 24 to 48 hour wait really bothers me. What can I do?
+                                    <p>It bothers me too. Quickly itself reloads the school calendar every 5 minutes, but Google is a company and they want to cut on costs. <a href='https://github.com/derekantrican/GAS-ICS-Sync'>Someone has made a script</a> to increase the frequency of Google Calendar synching but I have not tested it yet (let me know if you do!). Other than that, you can look into using a different calendar app than Google Calendar, but I haven't tested that yet, either.</p>
+                               </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <button @click='reset' type='button' class='btn btn-outline-success page_item'>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+              <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+            </svg>
+            Reset
+        </button>
     </template>
     <template v-if='connections'>
         <h4 class='page_item' id='name'>[[name]]'s Connections</h4>
