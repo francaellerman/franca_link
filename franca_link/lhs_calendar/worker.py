@@ -7,6 +7,7 @@ import os
 import tabula
 import sqlite3
 import pandas as pd
+import numpy as np
 import pkg_resources
 import subprocess
 import logging
@@ -23,6 +24,7 @@ import io
 import requests
 import pyffx
 from cryptography.fernet import Fernet
+import time as time_lib
 
 start = 'calendar/'
 
@@ -109,8 +111,8 @@ def get_pdf_info(time):
     info['hr'] = between(text, 'HR:\n\n', '\n')
     return info
 
-def db(*args, no_Row=False):
-    con = sqlite3.connect(start + 'calendar.sql')
+def db(*args, no_Row=False, file='calendar.sql'):
+    con = sqlite3.connect(start + file)
     if not no_Row:
         con.row_factory = sqlite3.Row
     cur = con.cursor()
@@ -134,34 +136,38 @@ def delete_previous_rows(information):
 
 def insert_sql_data(information, time, file):
     assert not information['name'].find(',') == -1
-    df = tabula.read_pdf(file, pages=1)[0]
+    df = tabula.read_pdf(file, pages=1, silent=True)[0]
     insert_df_in_sql(information, time, df)
 
 def separate_df(df):
-    closies = [['Description','Room'], ['Teacher', 'Term']]
+    closies = [['Teacher', 'Term']]
     def teacher_room(value):
         return [value[:-3 - 1], value[-3:]]
     def separate_col(closie, col):
         nonlocal closies
-        if closie == 0:
-            df[closies[closie][0]] = df[col].apply(lambda value: value[:value.rfind(' ')])
-            df[closies[closie][1]] = df[col].apply(lambda value: value[value.rfind(' ') + 1:])
-        else:
-            df[closies[closie][0]] = df[col].apply(lambda value: value[:-3 -1])
-            df[closies[closie][1]] = df[col].apply(lambda value: value[-3:])
+        df[closies[closie][0]] = df[col].apply(lambda value: value[:-3 -1])
+        df[closies[closie][1]] = df[col].apply(lambda value: value[-3:])
     def check_separate_col(col):
         nonlocal closies
-        for closie in range(2):
+        for closie in range(1):
             if closies[closie][0] in col and closies[closie][1] in col:
                 separate_col(closie, col)
     [check_separate_col(col) for col in df.columns]
 
 def insert_df_in_sql(information, time, df, debug=False):
     separate_df(df)
-    df = df[['Course','Level','Description', 'Room','Teacher','Term','Schedule']].dropna()
-    df = df[df['Schedule'] != 'Adv']
+    df = df[['Course','Level','Description', 'Room','Teacher','Term','Schedule']]
+    df = df.dropna(axis=0, subset=['Description', 'Course', 'Term', 'Schedule'])
+    df = df.replace({np.nan: None})
+    df = df.replace('', None)
+    def correct_format(row):
+        boolean = (bool(re.match('^(?:[A-H][1-4]*)+$', row['Schedule'])) and
+                not row['Course'].find('-') == -1)
+        return boolean
+    include = df.apply(correct_format, axis=1)
+    df = df.loc[include]
     delete_previous_rows(information)
-    db("insert into students(name, hr, created, privacy) values(?,?,?, ?) on conflict(name, hr) do update set created = excluded.created", [information['name'], information['hr'], time, 'Default'])
+    db("insert into students(name, hr, created, privacy, lock) values(?,?,?,?,?) on conflict(name, hr) do update set created = excluded.created, lock = excluded.lock", [information['name'], information['hr'], time, 'Default', 1])
     #empty cells are outputted as nans. dropnan deletes rows with nans like
     #counselor seminars and I-block
     #No one cares about credits
@@ -181,13 +187,18 @@ def insert_df_in_sql(information, time, df, debug=False):
             cols[0] = 'id'
         inserts = f"{name}({','.join(cols)},created) values({','.join(['?']*(len(cols)+1))})"
         def make_equal(name):
-            return f"{name} = ?"
+            return f"{name} is ?"
         def make_excluded(name):
             return f"{name} = excluded.{name}"
         cols_same = ' and '.join([make_equal(x) for x in cols])
+        teacher_index = look(cols, 'Teacher')
         def upsert_course_name(row):
             nonlocal name
             nonlocal cols_same
+            nonlocal teacher_index
+            global my_logger
+            if teacher_index and type(row[teacher_index]) == str and not row[teacher_index].find(';') == -1:
+                row[teacher_index] = row[teacher_index][:row[teacher_index].find(';')]
             #If row is an exact match, except for creation date, for something already there
             string = f"select created from {name} where {cols_same}"
             if len(db(string,row)) == 0:
@@ -203,7 +214,7 @@ def insert_df_in_sql(information, time, df, debug=False):
                         message_start = 'SQL row was updated'
                         db(command, list(row) + [created])
                     else: message_start = 'SQL row was attempted to update' 
-                    my_logger.warning(f'{message_start} with {list(row)}', extra={'calendar_name': information['name'], 'calendar_hr': information['hr'], 'db_created': time})
+                    my_logger.warning(f'{message_start} with {list(row) + [created]}', extra={'calendar_name': information['name'], 'calendar_hr': information['hr'], 'db_created': time})
         #Rows will be in order of cols
         [upsert_course_name(row) for row in course_df.to_numpy()]
     collect_class_info('courses', ['course_no', 'Description', 'Level'], time)
@@ -216,16 +227,21 @@ def insert_df_in_sql(information, time, df, debug=False):
     except Exception as e:
         con.close()
         raise e
+    db("update students set lock = 0 where name = ? and hr = ?",
+            [information['name'], information['hr']])
 
 def process_db_created(time):
     file = open(f'{start}pdfs/{time}.pdf', 'rb')
-    process_pdf(file, time)
+    return process_pdf(file, time)
 
 def process_pdf(file, time):
+    global config_dict
     file.seek(0)
     verify_pdf(file, time)
     file.seek(0)
     information = get_pdf_info(time)
+    if information['name'] in config_dict['banned_names']:
+        raise Exception(f"{information['name']} is banned")
     #if worker.returning_user_name(information['ID']):
     #    message = "Request success: returning user"
     file.seek(0)
@@ -237,21 +253,34 @@ def pretend_to_be_post(filename):
     information = get_pdf_info(filename)
     insert_sql_data(information, datetime.datetime.utcnow().isoformat(), filename)
 
-class LHS_Calendar:
+def make_class_variables(cls):
+    #Because no one wants to deal with Python's class scoping
     global config_dict
-    config = config_dict
-    tz = pytz.timezone('America/New_York')
-    semester_periods = {}
-    def get_date(config, key, d='semester_periods'):
-        return datetime.datetime(*config[d][key],
-                tzinfo = pytz.timezone('America/New_York'))
-    semester_periods['S 1'] = [get_date(config, 0), get_date(config, 1)]
-    semester_periods['S 2'] = [get_date(config, 1), get_date(config, 2)]
-    quarter_turnovers = {}
-    for semester in semester_periods:
-        quarter_turnovers[semester] = get_date(config, semester, d='quarter_turnovers')
+    cls.config = config_dict
+    cls.tz = pytz.timezone('America/New_York')
+    def make_date(tup):
+        return datetime.datetime(*tup, tzinfo = pytz.timezone('America/New_York'))
+    cls.semester_periods = {'S 1': None, 'S 2': None}
+    for index, semester in enumerate(cls.semester_periods):
+        cls.semester_periods[semester] = [make_date(cls.config['semester_periods'][i])
+                for i in [index, index + 1]]
+        #def get_date(key, d='semester_periods'):
+        #    nonlocal make_date
+        #    return make_date(config_dict[d][key])
+    cls.all_cs_dates = {k: [make_date(tup) for tup in v] for k, v in cls.config['cs_dates'].items()}
+    cls.quarter_turnovers = {}
+    for semester in cls.semester_periods:
+        cls.quarter_turnovers[semester] = make_date(cls.config['quarter_turnovers'][semester])
+
+class LHS_Calendar:
 
     def __init__(self, name, hr):
+        while True:
+            lock = db("select lock from students where name = ? and hr = ?", [name, 
+                hr])[0]['lock']
+            if lock == 1: time_lib.sleep(.5)
+            elif lock == 0: break
+        self.hr = hr
         while True:
             try:
                 with open(start + 'calendar.ics', 'rb') as f:
@@ -272,10 +301,13 @@ class LHS_Calendar:
         self.lunches = {"S 1": [None]*6, "S 2": [None]*6}
         ex = db("select course_no, description, level, term, room, teacher, schedule from enrollments join courses on enrollments.course_no = courses.id join sections using(course_no, section, term) where student_name = ? and student_hr = ?", [name, hr])
         assert len(ex) > 0
+        self.cs_block = None
         [self.make_block(row) for row in ex]
         self.cal['X-WR-CALNAME'] = f"Quickly: {display_name(name, hr)}'s calendar"
-        self.cal['X-WR-CALDESC'] = "Go to http://franca.link/quickly to see information on your calendar."
+        self.cal['X-WR-CALDESC'] = "Updates every 24 to 48 hours. Go to http://franca.link/quickly to see information on your calendar."
         self.dates_to_lunches = {'S 1':{}, 'S 2':{}}
+        #For people who might not have a Counselor Seminar so special_edit_event
+        #doesn't fail to recognize self.cs_block
         [[[self.edit_event(func, semester, subcomponent) for subcomponent in
                 self.cal.subcomponents]
                 for func in [LHS_Calendar.special_edit_event,
@@ -285,37 +317,44 @@ class LHS_Calendar:
                 for semester in LHS_Calendar.semester_periods]
         self.del_empty_subcomponents()
         self.ical = self.cal.to_ical().decode('utf-8')
-        #with open(start + 'test.ics', 'w') as f:
-        #    f.write(self.ical)
     
+    def get_datetime(event):
+        time = ical.prop.vDDDTypes.from_ical(event['DTSTART'])
+        if type(time) is datetime.date:
+            time = Find_and_replace.date_to_datetime(LHS_Calendar.tz, time)
+        return time
+
     def make_block(self, row):
-        #Counselor seminar course numbers seem to start with CS.
-        #CS's don't actually go on for the whole semester, so they are excluded in this version.
-        #S stands for semester
-        terms = []
-        #It seems to remember the capitalization of each column??
-        #ex. course_no and Term
-        row = dict(row)
-        if row['Term'] == 'ALL':
-            for term in self.blocks:
-                terms.append(term)
-        elif row['Term'] in self.blocks:
-            terms.append(row['Term'])
-        match_objects = re.finditer(LHS_Calendar.config['re_pattern'], row['Schedule'])
-        rest_of_row = row.copy()
-        rest_of_row.pop('Term')
-        rest_of_row.pop('Schedule')
-        for match_object in match_objects:
-            letter = match_object.group('letter')
-            numbers = match_object.group('number')
-            if numbers == '':
-                #Ex. if the block of a class is listed as "A,"
-                #then it's equivalent to "A1234"
-                numbers = '1234'
-            for number in numbers: #
-                for term in terms:
-                    self.blocks[term][letter + number] = rest_of_row
-                    self.make_lunch(row, term, letter + number)
+        if row['course_no'].startswith('CS'):
+            self.cs_block = row['Schedule']
+            grade = int(row['course_no'][2:])
+            self.cs_dates = LHS_Calendar.all_cs_dates[grade]
+            self.cs_room = row['Room']
+        else:
+            terms = []
+            #It seems to remember the capitalization of each column??
+            #ex. course_no and Term
+            row = dict(row)
+            if row['Term'] == 'ALL':
+                for term in self.blocks:
+                    terms.append(term)
+            elif row['Term'] in self.blocks:
+                terms.append(row['Term'])
+            match_objects = re.finditer(LHS_Calendar.config['re_pattern'], row['Schedule'])
+            rest_of_row = row.copy()
+            rest_of_row.pop('Term')
+            rest_of_row.pop('Schedule')
+            for match_object in match_objects:
+                letter = match_object.group('letter')
+                numbers = match_object.group('number')
+                if numbers == '':
+                    #Ex. if the block of a class is listed as "A,"
+                    #then it's equivalent to "A1234"
+                    numbers = '1234'
+                for number in numbers: #
+                    for term in terms:
+                        self.blocks[term][letter + number] = rest_of_row
+                        self.make_lunch(row, term, letter + number)
 
     def make_lunch(self, row, term, block):
         day = look(LHS_Calendar.config['lunch_blocks'], block)
@@ -324,7 +363,9 @@ class LHS_Calendar:
             if re.match(LHS_Calendar.config['first_lunch'], course_no):
                 self.lunches[term][day] = 0
             #Gym is covered by first lunch so room should be a number from here on
-            else:
+            #If row['Room'] is None then I can't determine lunch so I'll just
+            #let all three be displayed
+            elif row['Room'] is not None:
                 room = int(row['Room'])
                 if room % 2 == 0: self.lunches[term][day] = 1
                 elif room % 2 == 1: self.lunches[term][day] = 2
@@ -333,9 +374,7 @@ class LHS_Calendar:
     def edit_event(self, func, semester, subcomponent):
         if (type(subcomponent) is ical.cal.Event
             and not subcomponent.is_empty()):
-            time = ical.prop.vDDDTypes.from_ical(subcomponent['DTSTART'])
-            if type(time) is datetime.date:
-                time = Find_and_replace.date_to_datetime(LHS_Calendar.tz, time)
+            time = LHS_Calendar.get_datetime(subcomponent)
             #If period is None, the period is assumed to be always
             if semester is None or (time >= LHS_Calendar.semester_periods[semester][0]
                 and time < LHS_Calendar.semester_periods[semester][1]):
@@ -348,12 +387,28 @@ class LHS_Calendar:
         #key's corresponding value (the first parameter), otherwise
         #it is changed to SUMMARY itself (second paramter).
         value = self.blocks[semester].get(event['SUMMARY'])
-        if value is not None:
+        time_ = LHS_Calendar.get_datetime(event)
+        if event['SUMMARY'] == 'Advisory':
+            event['location'] = str(self.hr)
+        elif (event['SUMMARY'] == self.cs_block
+            and time_ >= self.cs_dates[0] and time_ <= self.cs_dates[1]):
+            event['summary'] = f'Counselor Seminar ({self.cs_block})'
+            if self.cs_room: event['location'] = self.cs_room
+        elif value is not None:
             event['SUMMARY'] = f'{value["Description"]} ({event["SUMMARY"]})'
-            local_time = self.datetime.replace(tzinfo=pytz.utc).astimezone(LHS_Calendar.tz)
-            user_time = local_time.strftime('%a, %b %d, %Y at %I:%M %p')
-            event['DESCRIPTION'] = f'{value["Level"]}\n{format_name(value["Teacher"])}\nGoogle Calendar last updated your calendar {user_time}'
-            event['LOCATION'] = value['Room']
+            #def place_for(key, newline = True):
+            #    nonlocal value
+            #    if key == 'Teacher': 
+            #    if value[key] is not None: return value[key] + '\n'
+            #    else: return ''
+            if value['Level']: event['description'] += value['Level'] + '\n'
+            if value['Teacher']: event['description'] += format_name(
+                    value['Teacher']) + '\n'
+            #event['DESCRIPTION'] = place_for("Level") + place_for("Teacher")
+            if value['Room'] is not None: event['LOCATION'] = value['Room']
+        local_time = self.datetime.replace(tzinfo=pytz.utc).astimezone(LHS_Calendar.tz)
+        user_time = local_time.strftime('%a, %b %d, %Y at %I:%M %p')
+        event['description'] += 'Google Calendar last updated your calendar ' + user_time
         #I'm not doing the following code because people might want to still
         #know the times of the three lunches to see their friends or smth
         #elif event['SUMMARY'] in LHS_Calendar.config['lunch_blocks']:
@@ -366,9 +421,7 @@ class LHS_Calendar:
             #The lunches are stored starting at 0 while Days start at 1
             #This will return a 0, 1, or 2
             lunch_no = self.lunches[semester][int(day_res.group(1)) - 1]
-            time_ = ical.prop.vDDDTypes.from_ical(event['DTSTART'])
-            if type(time_) is datetime.date:
-                time_ = Find_and_replace.date_to_datetime(LHS_Calendar.tz, time_)
+            time_ = LHS_Calendar.get_datetime(event)
             if time_ >= LHS_Calendar.quarter_turnovers[semester]:
                 if lunch_no == 1: lunch_no = 2
                 elif lunch_no == 2: lunch_no = 1
@@ -400,6 +453,8 @@ class LHS_Calendar:
                 self.cal.subcomponents.remove(empty_event)
             except ValueError:
                 return
+
+make_class_variables(LHS_Calendar)
 
 class Find_and_replace:
     def date_to_datetime(tz, date):
@@ -513,7 +568,7 @@ def make_sql_databases():
     cursor = con.cursor()
     #It's unclear if the sections are unique to each term or not
     #This isn't autoincrement for a reason I can't remember
-    cursor.execute("create table students(name text, hr int, created text, nickname text, privacy text, primary key (name, hr))")
+    cursor.execute("create table students(name text, hr int, created text, nickname text, privacy text, lock int, primary key (name, hr))")
     cursor.execute("create table courses(id text primary key, created text, Description text, Level text)")
     cursor.execute("create table sections(course_no text, Term text, section int, created text, Room text, Teacher text, Schedule text, primary key (course_no, Term, section), foreign key(course_no) references courses(id))")
     cursor.execute("create table enrollments(id integer primary key, created text, student_name text, student_hr int, course_no text, section int, Term text, foreign key (course_no, section, Term) references sections (course_no, section, Term))")
