@@ -171,9 +171,11 @@ def insert_df_in_sql(information, time, df, local=False):
     include = df.apply(correct_format, axis=1)
     df = df.loc[include]
     def trim_teacher(value):
-        found = value.find(';')
-        if found == -1: return value
-        else: return value[:found]
+        if type(value) == str:
+            found = value.find(';')
+            if found == -1: return value
+            else: return value[:found]
+        else: return None
     df['Teacher'] = df['Teacher'].apply(trim_teacher)
     delete_previous_rows(information)
     db("insert into students(name, hr, created, privacy, lock) values(?,?,?,?,?) on conflict(name, hr) do update set created = excluded.created, lock = excluded.lock", [information['name'], information['hr'], time, 'Default', 1])
