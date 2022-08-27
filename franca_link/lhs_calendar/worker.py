@@ -80,10 +80,10 @@ def verify_pdf(file, time):
             raise pdf_verification_exception("Metadata does not fit the criteria: same producer", md.get('Producer'))
         if not md.get('ModDate') == md.get('CreationDate'):
             my_logger.warning(f"Metadata does not fit the criteria: same mod and creation, {md.get('ModDate')}, {md.get('CreationDate')}", extra={'db_created': time, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr')})
-        today = datetime.datetime.now().astimezone(pytz.timezone('America/New_York')).strftime('%Y%m%d')
-        day = md.get('CreationDate').decode('utf-8')[2:10]
-        if not today == day:
-            raise pdf_verification_exception(f"Uploaded PDF is from {md.get('CreationDate')}, not today")
+        #today = datetime.datetime.now().astimezone(pytz.timezone('America/New_York')).strftime('%Y%m%d')
+        #day = md.get('CreationDate').decode('utf-8')[2:10]
+        #if not today == day:
+        #    raise pdf_verification_exception(f"Uploaded PDF is from {md.get('CreationDate')}, not today")
         if len(caught_warnings) > 0:
             raise Exception("Getting PDF metadata raised a warning")
     first_year = str(config['semester_periods'][0][0])
