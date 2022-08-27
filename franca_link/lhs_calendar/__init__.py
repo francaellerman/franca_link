@@ -77,14 +77,15 @@ def post():
             file.save(os.path.join(start + "pdfs", f'{time}.pdf'))
         information = worker.process_pdf(file, time)
         message = "Request success"
+        if file: file = file.filename
     except worker.pdf_verification_exception:
-        wrapper_related.exception(extra={'db_created': time, 'pdf_verification_exception': True, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr'), 'flask_filename': file.filename})
+        wrapper_related.exception(extra={'db_created': time, 'pdf_verification_exception': True, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr'), 'flask_filename': file})
         resp = flask.json.jsonify("pdf_verification_exception")
     except:
-        wrapper_related.exception(extra={'db_created': time, 'pdf_verification_exception': False, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr'), 'flask_filename': file.filename})
+        wrapper_related.exception(extra={'db_created': time, 'pdf_verification_exception': False, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr'), 'flask_filename': file})
         flask.abort(500)
     else:
-        wrapper_related.info(message, extra={'db_created': time, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr'), 'flask_filename': file.filename})
+        wrapper_related.info(message, extra={'db_created': time, 'calendar_name': information.get('name'), 'calendar_hr': information.get('hr'), 'flask_filename': file})
         flask.session.permanent = True
         flask.session['lhs_calendar_name'] = information['name']
         flask.session['lhs_calendar_hr'] = information['hr']
