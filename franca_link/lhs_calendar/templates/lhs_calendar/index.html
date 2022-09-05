@@ -124,12 +124,12 @@
                            <li>Make sure the file is downloaded and that you know the number in the file name 'report###.pdf'.</li>
                        {% endif %}
                    {% else %}
-                       <li>Make sure the file is downloaded and that you know the number in the file name 'report###.pdf'.</li>
+                       <li>If a new window opened when you clicked "Run", find a download button in the window to click. Otherwise, make sure the file is downloaded in some way. If you see the file name remember the number in 'report###.pdf'.</li>
                    {% endif %}
                </ol>
             </div>
-            <div class='card card-body page_item'>
-                <p>Next, click below to search and select your file 'report(your number).pdf'.</p>
+            <div class='card card-body page_item text_card' id='upload_box'>
+                <p>Next, click below to search and select your file 'report(your number).pdf'. If you have trouble finding your file, look in something like "Recent".</p>
                 <input class='form-control form-control-{% if mobile %}sm{% else %}lg
                     {% endif %}
                 ' @change='upload' type='file' accept='.pdf'>
