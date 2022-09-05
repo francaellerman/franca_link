@@ -29,6 +29,7 @@ var app = createApp({
         async upload() {
             this.started_uploading = await true
             this.errors = null
+            this.pdf_verification_exception = false
             const formData = await new FormData();
             const fileField = await document.querySelector('input[type="file"]');
             await formData.append('pdf', fileField.files[0]);

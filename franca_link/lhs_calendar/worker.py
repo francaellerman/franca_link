@@ -72,10 +72,6 @@ def verify_pdf(file, time):
     #Try to catch people trying to tamper with the files
     with warnings.catch_warnings(record=True) as caught_warnings:
         md = get_metadata(file)
-        if not md.get('ModDate') == md.get('CreationDate'):
-            my_logger.warning(f"Metadata does not fit the criteria: same mod and creation, {md.get('ModDate')}, {md.get('CreationDate')}", extra={'db_created': time})
-        if not md.get('Creator') == b'JasperReports (StudentScheduleHighSchool)':
-            raise pdf_verification_exception("Metadata does not fit the criteria: same creator", md.get('Creator'))
         if not md.get('Producer') == b'iText 2.1.5 (by lowagie.com)':
             raise pdf_verification_exception("Metadata does not fit the criteria: same producer", md.get('Producer'))
         if not md.get('ModDate') == md.get('CreationDate'):
@@ -86,10 +82,19 @@ def verify_pdf(file, time):
         #    raise pdf_verification_exception(f"Uploaded PDF is from {md.get('CreationDate')}, not today")
         if len(caught_warnings) > 0:
             raise Exception("Getting PDF metadata raised a warning")
+    if md.get('Creator') == b'JasperReports (StudentScheduleHighSchool)':
+        teacher = False
+    elif md.get('Creator') == b'JasperReports (TeacherScheduleHighSchool)':
+        teacher =  True
+    else:
+        raise pdf_verification_exception("Metadata does not fit the criteria: same creator", md.get('Creator'))
     first_year = str(config['semester_periods'][0][0])
-    file_first_year = between(get_pdf_text(time), "LEXINGTON HIGH SCHOOL SCHEDULE FOR ","-")
+    if teacher: title = "LEXINGTON HIGH SCHOOL STAFF SCHEDULE FOR "
+    else: title = "LEXINGTON HIGH SCHOOL SCHEDULE FOR "
+    file_first_year = between(get_pdf_text(time),title ,"-")
     if not file_first_year == first_year:
         raise pdf_verification_exception("First year in title is", file_first_year)
+    return teacher
 
 def get_pdf_text(time):
     #output_string = io.StringIO()
@@ -104,7 +109,7 @@ def between(base, str1, str2):
     #So that str2 has to be after str1
     return base[start:base.find(str2, start)]
 
-def get_pdf_info(time):
+def get_pdf_info(time, teacher):
     info = {}
     text = get_pdf_text(time)
     #info['name'] = between(text, '', '\n')
@@ -112,7 +117,10 @@ def get_pdf_info(time):
     start = text.rfind('\n',0,comma) + 1
     end = text.find('\n', comma, -1)
     info['name'] = text[start:end]
-    info['hr'] = between(text, 'HR:\n\n', '\n')
+    if teacher:
+        info['hr'] = between(text, 'Adv-', '\n\n')
+    else:
+        info['hr'] = between(text, 'HR:\n\n', '\n')
     return info
 
 def db(*args, no_Row=False, file='calendar.sql'):
@@ -138,10 +146,43 @@ def delete_previous_rows(information):
     #    return True
     #return False
 
-def insert_sql_data(information, time, file, local=False):
+def insert_sql_data(information, time, file, teacher, local=False):
     assert not information['name'].find(',') == -1
-    df = tabula.read_pdf(file, pages=1, silent=True)[0]
+    if teacher: df = teacher_table(get_pdf_text(time))
+    else:
+        df = tabula.read_pdf(file, pages=1, silent=True)[0]
+        separate_df(df)
     insert_df_in_sql(information, time, df, local=local)
+
+def is_Course(text):
+    hyphen = text.find('-')
+    try:
+        if hyphen == -1: raise ValueError
+        else: int(text[hyphen + 1:])
+    except ValueError: return False
+    else: return True
+
+def teacher_table(text):
+    df = pd.DataFrame()
+    stop = text.find('\n\nLEXINGTON HIGH SCHOOL STAFF SCHEDULE FOR ')
+    if stop == -1: stop = len(text)
+    cells = text[:stop].split('\n\n')
+    Course_start = None
+    for index, value in enumerate(cells):
+        if not Course_start and is_Course(value):
+            Course_start = index
+        elif Course_start and not is_Course(value):
+            Course_end = index
+            break
+    cells = cells[Course_start:]
+    length = Course_end - Course_start
+    column_names = ['Course', 'Description', 'Room', 'Term', 'Schedule']
+    if not len(cells) == length * len(column_names): raise Exception("Columns are not the required length")
+    for index, name in enumerate(column_names):
+        df[name] = cells[index*length:(index+1)*length]
+    df['Level'] = None
+    df['Teacher'] = None
+    return df
 
 def separate_df(df):
     closies = [['Teacher', 'Term']]
@@ -159,7 +200,6 @@ def separate_df(df):
     [check_separate_col(col) for col in df.columns]
 
 def insert_df_in_sql(information, time, df, local=False):
-    separate_df(df)
     df = df[['Course','Level','Description', 'Room','Teacher','Term','Schedule']]
     df = df.replace('', np.nan)
     df = df.dropna(axis=0, subset=['Description', 'Course', 'Term', 'Schedule'])
@@ -242,15 +282,15 @@ def process_db_created(time):
 def process_pdf(file, time, local=False):
     global config_dict
     file.seek(0)
-    verify_pdf(file, time)
+    teacher = verify_pdf(file, time)
     file.seek(0)
-    information = get_pdf_info(time)
+    information = get_pdf_info(time, teacher)
     if information['name'] in config_dict['banned_names']:
         raise Exception(f"{information['name']} is banned")
     #if worker.returning_user_name(information['ID']):
     #    message = "Request success: returning user"
     file.seek(0)
-    insert_sql_data(information, time, file, local=local)
+    insert_sql_data(information, time, file, teacher, local=local)
     return information
 
 def make_class_variables(cls):
@@ -274,7 +314,8 @@ def make_class_variables(cls):
 
 class LHS_Calendar:
 
-    def __init__(self, name, hr):
+    def __init__(self, name, hr, just_lunch=False):
+        self.just_lunch = just_lunch
         while True:
             lock = db("select lock from students where name = ? and hr = ?", [name, 
                 hr])[0]['lock']
@@ -303,6 +344,7 @@ class LHS_Calendar:
         assert len(ex) > 0
         self.cs_block = None
         [self.make_block(row) for row in ex]
+        if just_lunch: return
         self.cal['X-WR-CALNAME'] = f"Quickly: {display_name(name, hr)}'s calendar"
         self.cal['X-WR-CALDESC'] = "Updates every 24 to 48 hours. Go to http://franca.link/quickly to see information on your calendar."
         self.dates_to_lunches = {'S 1':{}, 'S 2':{}}
@@ -353,7 +395,7 @@ class LHS_Calendar:
                     numbers = '1234'
                 for number in numbers: #
                     for term in terms:
-                        self.blocks[term][letter + number] = rest_of_row
+                        if not self.just_lunch: self.blocks[term][letter + number] = rest_of_row
                         self.make_lunch(row, term, letter + number)
 
     def make_lunch(self, row, term, block):

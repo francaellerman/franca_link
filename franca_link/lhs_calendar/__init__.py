@@ -22,12 +22,13 @@ index_ = wrapper()
 @app.route('/', methods=['GET'])
 @index_
 def index():
-    def check_for(name):
-        if not flask.session.get(name):
-            flask.session.clear()
-            flask.session[name] = True
-    check_for('post_op_teacher_term_reload')
-    if datetime.date.today() >= datetime.date(2022, 8, 29): check_for('before_first_day')
+    #This is causing cookie problems and I'm not willing to fix it
+    #def check_for(name):
+    #    if not flask.session.get(name):
+    #        flask.session.clear()
+    #        flask.session[name] = True
+    #check_for('post_op_teacher_term_reload')
+    #if datetime.date.today() >= datetime.date(2022, 8, 29): check_for('before_first_day')
     global config_
     pre_user_agent = flask.request.headers.get('User-Agent')
     if pre_user_agent:
