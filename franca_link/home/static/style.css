@@ -105,6 +105,11 @@ h1 img, h2 img {
     margin-bottom: 0;
 }
 
+/* I can't figure out how to get it rounded
+.accordion-item:first-of-type {
+    border-radius: .75rem;
+}*/
+
 #landing {
     display: flex;
     flex-direction: row;
