@@ -307,7 +307,7 @@ def make_class_variables(cls):
         #def get_date(key, d='semester_periods'):
         #    nonlocal make_date
         #    return make_date(config_dict[d][key])
-    cls.all_cs_dates = {k: [make_date(tup) for tup in v] for k, v in cls.config['cs_dates'].items()}
+    cls.all_cs_dates = {k: [make_date(v[0]), make_date(v[1] + [23, 59, 59])] for k, v in cls.config['cs_dates'].items()}
     cls.quarter_turnovers = {}
     for semester in cls.semester_periods:
         cls.quarter_turnovers[semester] = make_date(cls.config['quarter_turnovers'][semester])
