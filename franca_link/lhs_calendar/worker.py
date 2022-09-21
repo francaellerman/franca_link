@@ -340,6 +340,7 @@ class LHS_Calendar:
         tz = Find_and_replace.tz(self.cal)
         self.blocks = {"S 1": {}, "S 2": {}}
         self.lunches = {"S 1": [None]*6, "S 2": [None]*6}
+        self.half_lunches = {"S 1": [None]*6, "S 2": [None]*6}
         ex = db("select course_no, description, level, term, room, teacher, schedule from enrollments join courses on enrollments.course_no = courses.id join sections using(course_no, section, term) where student_name = ? and student_hr = ?", [name, hr])
         assert len(ex) > 0
         self.cs_block = None
@@ -412,6 +413,16 @@ class LHS_Calendar:
                 if room % 2 == 0: self.lunches[term][day] = 1
                 elif room % 2 == 1: self.lunches[term][day] = 2
                 else: raise Exception(row, block, "does not fit criteria for any lunches")
+        else:
+            half_day = look(LHS_Calendar.config['half_lunch_blocks'], block)
+            if half_day is not None:
+                if row['Room'] is None: return
+                try:
+                    room = int(row['Room'])
+                    if room >= 500: self.half_lunches[term][half_day] = 0
+                    else: raise ValueError #I'm so lazy
+                #For if it's something like GYM or any room num under 500
+                except ValueError: self.half_lunches[term][half_day] = 1
 
     def edit_event(self, func, semester, subcomponent):
         if (type(subcomponent) is ical.cal.Event
@@ -457,18 +468,18 @@ class LHS_Calendar:
         #    event['SUMMARY'] = f'{event["SUMMARY"]} (Lunch)'
 
     def edit_lunches_of_day(self, semester, event):
-        #See if the event is a 'Day #' event.
-        day_res = re.match(LHS_Calendar.config['day_pattern'], event['SUMMARY'])
-        if day_res:
+        def make_date_to_lunch(day_res, lunch_per_day_list, turnover):
             #The lunches are stored starting at 0 while Days start at 1
             #This will return a 0, 1, or 2
-            lunch_no = self.lunches[semester][int(day_res.group(1)) - 1]
-            time_ = LHS_Calendar.get_datetime(event)
-            if time_ >= LHS_Calendar.quarter_turnovers[semester]:
-                if lunch_no == 1: lunch_no = 2
-                elif lunch_no == 2: lunch_no = 1
+            lunch_no = lunch_per_day_list[semester][int(day_res.group(1)) - 1]
+            if turnover:
+                time_ = LHS_Calendar.get_datetime(event)
+                if time_ >= LHS_Calendar.quarter_turnovers[semester]:
+                    if lunch_no == 1: lunch_no = 2
+                    elif lunch_no == 2: lunch_no = 1
             #If I didn't do copy(), lunches would be removed
             #directly from self.lunches
+            #There's no Lunch 3 on half days but it just will never get found
             other_lunches = LHS_Calendar.config['all_lunches'].copy()
             if lunch_no is None: other_lunches = []
             else: other_lunches.pop(lunch_no)
@@ -476,6 +487,14 @@ class LHS_Calendar:
             if type(date) is not datetime.date:
                 raise Exception("This Day # event is not an all-day event")
             self.dates_to_lunches[semester][(date)] = other_lunches
+        #See if the event is a 'Day #' event.
+        day_res = re.match(LHS_Calendar.config['day_pattern'], event['SUMMARY'])
+        if day_res: make_date_to_lunch(day_res, self.lunches, turnover=True)
+        else:
+            half_day_res = re.match(LHS_Calendar.config['half_day_pattern'],
+                    event['SUMMARY'])
+            if half_day_res: make_date_to_lunch(half_day_res, self.half_lunches,
+                    turnover=False)
 
     def delete_other_lunches(self, semester, event):
         event_datetime = ical.prop.vDDDTypes.from_ical(event['DTSTART'])
