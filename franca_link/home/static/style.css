@@ -141,7 +141,7 @@ h1 img, h2 img {
     text-align: center;
 }
 
-#landing.calendar span {
+#landing.calendar span, .announcement span{
     color: var(--green);
 }
 

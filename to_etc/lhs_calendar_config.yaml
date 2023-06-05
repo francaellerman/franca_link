@@ -1,0 +1,96 @@
+ffx_secret_key: #make a secret key, I used the same one as the one for Flask app session cookies
+links:
+  instagram: #instagram link
+  sms: sms:?body= #your message
+re_pattern: (?P<letter>[A-H])(?P<number>[1-4]*)
+lunch_blocks:
+- D1
+- F2
+- H2
+- D3
+- F4
+- H4
+half_lunch_blocks:
+- F1
+- D2
+- C2
+- F3
+- D4
+- C4
+first_lunch: ^(6|75|76|4|8|9|A|B|.9)
+semester_periods:
+- #start of first semester
+  - #Replace all of the years
+  - #months
+  - #and days
+- #end of first semester/beginning of second semester
+  - 2023
+  - 1
+  - 21
+- #end of second semester
+  - 2023
+  - 7
+  - 5
+quarter_turnovers: #The day it goes from Q1 to Q2 or Q3 to Q4
+  'S 1':
+    - 2022
+    - 11
+    - 5
+  'S 2':
+    - 2023
+    - 4
+    - 8
+#First date is first day, second date is last day of seminars
+cs_dates:
+  9:
+    -
+      - 2022
+      - 8
+      - 31
+    -
+      - 2022
+      - 9
+      - 9
+  10:
+    -
+      - 2023
+      - 3
+      - 28
+    -
+      - 2023
+      - 4
+      - 26
+  11:
+    -
+      - 2023
+      - 1
+      - 26
+    -
+      - 2022
+      - 3
+      - 7
+  12:
+    -
+      - 2022
+      - 12
+      - 5
+    -
+      - 2022
+      - 12
+      - 20
+even_room_lunches:
+  - 1
+  - 2
+  - 1
+  - 2
+day_pattern: ^Day ([1-6])( Two-hour delay)?$
+half_day_pattern: ^Day ([1-6]) Half Day$
+all_lunches:
+- Lunch 1
+- Lunch 2
+- Lunch 3
+open: True
+allow_updates: True
+aspen_file_name: Student Schedule HS-w 6day
+banned_names:
+  - #List is useful for people whose schedules will always be messed up so you don't have to deal with them
